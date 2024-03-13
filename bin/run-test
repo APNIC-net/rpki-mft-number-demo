@@ -109,6 +109,26 @@ sub manifest_number_too_large
     print "---\n";
 }
 
+if (not @ARGV) {
+    print "Usage: $0 {test-name} {validator-name} {validator-version}\n";
+    print "\n";
+    print "Test names:\n";
+    for my $test_name (sort keys %test_name_to_fn) {
+        print "  - $test_name\n";
+    }
+    print "Validators:\n";
+    for my $name (sort keys %validators) {
+        my @versions = @{$validators{$name}};
+        my $vstr = join ', ', @versions;
+        print "  - $name ($vstr)\n";
+    }
+    print "\n";
+    print "The string 'all' can also be used for each option,\n".
+          "to test multiple versions of a validator, or multiple\n".
+          "validators, or multiple tests.\n";
+    exit(10);
+}
+
 my ($test_name, $validator_name, $validator_version) = @ARGV;
 
 my @test_fns;

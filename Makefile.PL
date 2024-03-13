@@ -17,14 +17,6 @@ my $output = WriteMakefile(
     EXE_FILES      => [ qw(bin/setup-ca
                            bin/show-ca-cert
                            bin/reissue-crl-and-mft
-                           bin/init-rpki-client
-                           bin/run-rpki-client
-                           bin/init-fort
-                           bin/run-fort
-                           bin/init-routinator
-                           bin/run-routinator
-                           bin/init-octorpki
-                           bin/run-octorpki
                            bin/init-validator
                            bin/run-validator
                            bin/run-test) ],

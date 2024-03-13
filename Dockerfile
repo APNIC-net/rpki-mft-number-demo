@@ -26,7 +26,21 @@ RUN apt-get install -y \
     libdigest-sha-perl \
     libexpat1-dev \
     sudo \
-    less
+    less \
+    libdatetime-perl \
+    git \
+    zlib1g-dev \
+    libautodie-perl \
+    libipc-system-simple-perl \
+    autoconf \
+    automake \
+    build-essential \
+    libjansson-dev \
+    pkg-config \
+    libcurl4-openssl-dev \
+    libxml2-dev \
+    curl
+
 COPY cms.diff .
 RUN wget https://ftp.openssl.org/source/openssl-1.0.2p.tar.gz \
     && tar xf openssl-1.0.2p.tar.gz \
@@ -36,8 +50,6 @@ RUN wget https://ftp.openssl.org/source/openssl-1.0.2p.tar.gz \
     && make \
     && make install
 RUN cpanm Set::IntSpan Net::CIDR::Set
-RUN apt-get install -y \
-    libdatetime-perl
 RUN yes | unminimize
 
 RUN addgroup \
@@ -49,7 +61,6 @@ RUN addgroup \
     --gid 2000 \
     --uid 2000 \
     rpki-client
-RUN apt-get install -y git zlib1g-dev libautodie-perl
 RUN mkdir /opt/rpki-client-7.0
 RUN wget https://ftp.openbsd.org/pub/OpenBSD/rpki-client/rpki-client-7.0.tar.gz \
     && tar xf rpki-client-7.0.tar.gz \
@@ -81,8 +92,6 @@ RUN git clone https://github.com/kristapsdz/openrsync.git \
     && make install \
     && cd ..
 
-RUN apt-get install -y libipc-system-simple-perl
-RUN apt-get install -y autoconf automake build-essential libjansson-dev pkg-config libcurl4-openssl-dev libxml2-dev
 RUN mkdir /opt/fort-1.6.1
 RUN wget https://github.com/NICMx/FORT-validator/releases/download/1.6.1/fort-1.6.1.tar.gz \
     && tar xf fort-1.6.1.tar.gz \
@@ -108,7 +117,6 @@ RUN wget https://github.com/NICMx/FORT-validator/releases/download/1.5.3/fort-1.
     && make install \
     && cd ..
 
-RUN apt-get install -y curl
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 RUN echo 'source root/.cargo/env' >> root/.bashrc
 ENV PATH="/root/.cargo/bin:${PATH}"
