@@ -9,6 +9,6 @@ my ($state_dir) = @ARGV;
 
 $> = 2000;
 chdir $state_dir;
-system("./rpki-client-link");
+system("./octorpki-link");
 
 1;

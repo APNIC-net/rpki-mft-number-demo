@@ -1,0 +1,55 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+use Cwd qw(cwd);
+use autodie qw(:all);
+use File::Slurp qw(read_file write_file);
+
+my ($state_dir, $tal_path, $version) = @ARGV;
+
+my $cwd = cwd();
+if ($tal_path !~ /^\//) {
+    $tal_path = "$cwd/$tal_path";
+}
+
+my @vord = split /\./, $version;
+my $le_11 = ($vord[0] == 0 and $vord[1] <= 11);
+
+mkdir $state_dir;
+chdir $state_dir;
+mkdir "tals";
+my ($real_tal_path) = read_file($tal_path);
+system("cp $real_tal_path tals/tal.tal");
+mkdir "cache";
+my $exec = "/opt/routinator-$version/bin/routinator";
+if (not -e $exec) {
+    die "Validator version number is invalid.";
+}
+if ($le_11) {
+    write_file("routinator-link",
+               "#!/bin/sh\n".
+               "rm -f log;\n".
+               "$exec ".
+               "-r . ".
+               "-t tals ".
+               "--allow-dubious-hosts ".
+               "--logfile log ".
+               "vrps > vrps;\ncat log");
+} else {
+    write_file("routinator-link",
+               "#!/bin/sh\n".
+               "rm -f log;\n".
+               "$exec ".
+               "-r . ".
+               "--no-rir-tals ".
+               "--extra-tals-dir tals ".
+               "--allow-dubious-hosts ".
+               "--logfile log ".
+               "vrps > vrps;\ncat log");
+}
+chmod 0755, "routinator-link";
+system("chown -R rpki-client:rpki-client $state_dir");
+
+1;

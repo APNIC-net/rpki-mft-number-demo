@@ -16,18 +16,22 @@ if ($tal_path !~ /^\//) {
 
 mkdir $state_dir;
 chdir $state_dir;
-mkdir "cache";
-mkdir "output";
+mkdir "tals";
 my ($real_tal_path) = read_file($tal_path);
-system("cp $real_tal_path tal");
-my $exec = "/opt/rpki-client-$version/sbin/rpki-client";
+system("cp $real_tal_path tals/tal.tal");
+mkdir "cache";
+my $exec = "/opt/octorpki-$version/bin/octorpki";
 if (not -e $exec) {
     die "Validator version number is invalid.";
 }
-write_file("rpki-client-link",
-           "#!/bin/sh\n$exec ".
-           "-c -t tal -d cache output >/dev/null");
-chmod 0755, "rpki-client-link";
+write_file("octorpki-link",
+           "#!/bin/sh\n".
+           "$exec ".
+           "-allow.root ".
+           "-tal.root=tals/tal.tal ".
+           "-mode=oneoff ".
+           "-output.sign=false");
+chmod 0755, "octorpki-link";
 system("chown -R rpki-client:rpki-client $state_dir");
 
 1;

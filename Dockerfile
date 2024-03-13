@@ -39,6 +39,7 @@ RUN cpanm Set::IntSpan Net::CIDR::Set
 RUN apt-get install -y \
     libdatetime-perl
 RUN yes | unminimize
+
 RUN addgroup \
     --gid 2000 \
     rpki-client && \
@@ -79,7 +80,49 @@ RUN git clone https://github.com/kristapsdz/openrsync.git \
     && make \
     && make install \
     && cd ..
+
 RUN apt-get install -y libipc-system-simple-perl
+RUN apt-get install -y autoconf automake build-essential libjansson-dev pkg-config libcurl4-openssl-dev libxml2-dev
+RUN mkdir /opt/fort-1.6.1
+RUN wget https://github.com/NICMx/FORT-validator/releases/download/1.6.1/fort-1.6.1.tar.gz \
+    && tar xf fort-1.6.1.tar.gz \
+    && cd fort-1.6.1 \
+    && ./configure --prefix=/opt/fort-1.6.1 \
+    && make \
+    && make install \
+    && cd ..
+RUN mkdir /opt/fort-1.5.4
+RUN wget https://github.com/NICMx/FORT-validator/releases/download/1.5.4/fort-1.5.4.tar.gz \
+    && tar xf fort-1.5.4.tar.gz \
+    && cd fort-1.5.4 \
+    && ./configure --prefix=/opt/fort-1.5.4 \
+    && make \
+    && make install \
+    && cd ..
+RUN mkdir /opt/fort-1.5.3
+RUN wget https://github.com/NICMx/FORT-validator/releases/download/1.5.3/fort-1.5.3.tar.gz \
+    && tar xf fort-1.5.3.tar.gz \
+    && cd fort-1.5.3 \
+    && ./configure --prefix=/opt/fort-1.5.3 \
+    && make \
+    && make install \
+    && cd ..
+
+RUN apt-get install -y curl
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+RUN echo 'source root/.cargo/env' >> root/.bashrc
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN mkdir /opt/routinator-0.13.2
+RUN cargo install --locked --force routinator --root /opt/routinator-0.13.2 --version 0.13.2
+RUN mkdir /opt/routinator-0.12.0
+RUN cargo install --locked --force routinator --root /opt/routinator-0.12.0 --version 0.12.0
+RUN mkdir /opt/routinator-0.11.0
+RUN cargo install --locked --force routinator --root /opt/routinator-0.11.0 --version 0.11.0
+
+RUN mkdir -p /opt/octorpki-1.5.10/bin
+RUN wget https://github.com/cloudflare/cfrpki/releases/download/v1.5.10/octorpki-v1.5.10-linux-x86_64 -O /opt/octorpki-1.5.10/bin/octorpki
+RUN chmod 755 /opt/octorpki-1.5.10/bin/octorpki
+
 COPY . /root/rpki-mft-number-demo
 RUN cd /root/rpki-mft-number-demo/ && perl Makefile.PL && make && make install
 COPY rsyncd.conf /etc/

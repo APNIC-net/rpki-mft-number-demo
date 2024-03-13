@@ -254,12 +254,13 @@ sub initialise
         my @key_data = `$openssl x509 -in ca/ca.crt -noout -pubkey`;
         shift @key_data;
         pop @key_data;
+        my $kd_str = join '', @key_data;
 
         $aia = "rsync://$host_and_port/repo/$gski.cer";
         write_file($tal_path, <<EOF);
 $aia
 
-@key_data
+$kd_str
 EOF
     }
 
