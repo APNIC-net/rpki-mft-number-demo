@@ -48,11 +48,28 @@ RUN addgroup \
     --gid 2000 \
     --uid 2000 \
     rpki-client
-RUN apt-get install -y git zlib1g-dev
+RUN apt-get install -y git zlib1g-dev libautodie-perl
+RUN mkdir /opt/rpki-client-7.0
+RUN wget https://ftp.openbsd.org/pub/OpenBSD/rpki-client/rpki-client-7.0.tar.gz \
+    && tar xf rpki-client-7.0.tar.gz \
+    && cd rpki-client-7.0 \
+    && ./configure --with-user=rpki-client --prefix=/opt/rpki-client-7.0 \
+    && make \
+    && make install \
+    && cd ..
+RUN mkdir /opt/rpki-client-8.7
 RUN wget https://ftp.openbsd.org/pub/OpenBSD/rpki-client/rpki-client-8.7.tar.gz \
     && tar xf rpki-client-8.7.tar.gz \
     && cd rpki-client-8.7 \
-    && ./configure --with-user=rpki-client \
+    && ./configure --with-user=rpki-client --prefix=/opt/rpki-client-8.7 \
+    && make \
+    && make install \
+    && cd ..
+RUN mkdir /opt/rpki-client-9.0
+RUN wget https://ftp.openbsd.org/pub/OpenBSD/rpki-client/rpki-client-9.0.tar.gz \
+    && tar xf rpki-client-9.0.tar.gz \
+    && cd rpki-client-9.0 \
+    && ./configure --with-user=rpki-client --prefix=/opt/rpki-client-9.0 \
     && make \
     && make install \
     && cd ..
@@ -62,6 +79,7 @@ RUN git clone https://github.com/kristapsdz/openrsync.git \
     && make \
     && make install \
     && cd ..
+RUN apt-get install -y libipc-system-simple-perl
 COPY . /root/rpki-mft-number-demo
 RUN cd /root/rpki-mft-number-demo/ && perl Makefile.PL && make && make install
 COPY rsyncd.conf /etc/

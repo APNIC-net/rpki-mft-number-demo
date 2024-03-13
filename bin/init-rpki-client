@@ -1,0 +1,29 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+use Cwd qw(cwd);
+use autodie qw(:all);
+use File::Slurp qw(read_file write_file);
+
+my ($state_dir, $tal_path, $version) = @ARGV;
+
+my $cwd = cwd();
+if ($tal_path !~ /^\//) {
+    $tal_path = "$cwd/$tal_path";
+}
+
+mkdir $state_dir;
+chdir $state_dir;
+mkdir "cache";
+mkdir "output";
+my ($real_tal_path) = read_file($tal_path);
+system("cp $real_tal_path tal");
+write_file("rpki-client-link",
+           "#!/bin/sh\n/opt/rpki-client-$version/sbin/rpki-client ".
+           "-c -t tal -d cache output >/dev/null");
+chmod 0755, "rpki-client-link";
+system("chown -R rpki-client:rpki-client $state_dir");
+
+1;

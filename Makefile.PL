@@ -16,7 +16,9 @@ my $output = WriteMakefile(
     },
     EXE_FILES      => [ qw(bin/setup-ca
                            bin/show-ca-cert
-                           bin/reissue-crl-and-mft) ],
+                           bin/reissue-crl-and-mft
+                           bin/init-rpki-client
+                           bin/run-rpki-client) ],
     PREREQ_PM      => { 'Test::More'             => 0,
                         'HTTP::Daemon'           => 0,
                         'YAML'                   => 0,
