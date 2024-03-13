@@ -122,6 +122,12 @@ RUN cargo install --locked --force routinator --root /opt/routinator-0.11.0 --ve
 RUN mkdir -p /opt/octorpki-1.5.10/bin
 RUN wget https://github.com/cloudflare/cfrpki/releases/download/v1.5.10/octorpki-v1.5.10-linux-x86_64 -O /opt/octorpki-1.5.10/bin/octorpki
 RUN chmod 755 /opt/octorpki-1.5.10/bin/octorpki
+RUN mkdir -p /opt/octorpki-1.4.4/bin
+RUN wget https://github.com/cloudflare/cfrpki/releases/download/v1.4.4/octorpki-v1.4.4-linux-x86_64 -O /opt/octorpki-1.4.4/bin/octorpki
+RUN chmod 755 /opt/octorpki-1.4.4/bin/octorpki
+RUN mkdir -p /opt/octorpki-1.4.3/bin
+RUN wget https://github.com/cloudflare/cfrpki/releases/download/v1.4.3/octorpki-v1.4.3-linux-x86_64 -O /opt/octorpki-1.4.3/bin/octorpki
+RUN chmod 755 /opt/octorpki-1.4.3/bin/octorpki
 
 COPY . /root/rpki-mft-number-demo
 RUN cd /root/rpki-mft-number-demo/ && perl Makefile.PL && make && make install

@@ -4,11 +4,11 @@ use warnings;
 use strict;
 
 use File::Slurp qw(write_file);
+use POSIX qw();
 
 my ($state_dir) = @ARGV;
 
-$> = 2000;
 chdir $state_dir;
-system("./run-validator-link");
+system("sudo -u rpki-client ./run-validator-link");
 
 1;

@@ -610,6 +610,9 @@ sub issue_manifest
     chomp for @files;
     my @mft_files;
     for my $file (@files) {
+        if ($file =~ /\.mft$/) {
+            next;
+        }
         my ($ss) = `sha256sum $stg_repo/$file`;
         chomp $ss;
         $ss =~ s/ .*//;
