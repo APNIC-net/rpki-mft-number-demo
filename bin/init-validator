@@ -1,0 +1,95 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+use Cwd qw(cwd);
+use autodie qw(:all);
+use File::Slurp qw(read_file write_file);
+
+my ($state_dir, $tal_path, $validator, $version) = @ARGV;
+
+my $cwd = cwd();
+if ($tal_path !~ /^\//) {
+    $tal_path = "$cwd/$tal_path";
+}
+mkdir $state_dir;
+chdir $state_dir;
+mkdir "tals";
+my ($real_tal_path) = read_file($tal_path);
+system("cp $real_tal_path tals/tal.tal");
+
+if ($validator eq 'routinator') {
+    my @vord = split /\./, $version;
+    my $le_11 = ($vord[0] == 0 and $vord[1] <= 11);
+
+    mkdir "cache";
+    my $exec = "/opt/routinator-$version/bin/routinator";
+    if (not -e $exec) {
+        die "Validator version number is invalid.";
+    }
+    if ($le_11) {
+        write_file("run-validator-link",
+                   "#!/bin/sh\n".
+                   "rm -f log;\n".
+                   "$exec ".
+                   "-r . ".
+                   "-t tals ".
+                   "--allow-dubious-hosts ".
+                   "--logfile log ".
+                   "vrps > vrps;\ncat log");
+    } else {
+        write_file("run-validator-link",
+                   "#!/bin/sh\n".
+                   "rm -f log;\n".
+                   "$exec ".
+                   "-r . ".
+                   "--no-rir-tals ".
+                   "--extra-tals-dir tals ".
+                   "--allow-dubious-hosts ".
+                   "--logfile log ".
+                   "vrps > vrps;\ncat log");
+    }
+} elsif ($validator eq 'rpki-client') {
+    mkdir "cache";
+    mkdir "output";
+    my $exec = "/opt/rpki-client-$version/sbin/rpki-client";
+    if (not -e $exec) {
+        die "Validator version number is invalid.";
+    }
+    write_file("run-validator-link",
+               "#!/bin/sh\n$exec ".
+               "-c -t tals/tal.tal -d cache output >/dev/null");
+} elsif ($validator eq 'fort') {
+    mkdir "cache";
+    my $exec = "/opt/fort-$version/bin/fort";
+    if (not -e $exec) {
+        die "Validator version number is invalid.";
+    }
+    write_file("run-validator-link",
+               "#!/bin/sh\n/opt/fort-$version/bin/fort ".
+               "--tal tals ".
+               "--local-repository cache ".
+               "--output.roa roas ".
+               "--mode standalone");
+} elsif ($validator eq 'octorpki') {
+    mkdir "cache";
+    my $exec = "/opt/octorpki-$version/bin/octorpki";
+    if (not -e $exec) {
+        die "Validator version number is invalid.";
+    }
+    write_file("run-validator-link",
+               "#!/bin/sh\n".
+               "$exec ".
+               "-allow.root ".
+               "-tal.root=tals/tal.tal ".
+               "-mode=oneoff ".
+               "-output.sign=false");
+} else {
+    die "Invalid validator name '$validator'";
+}
+
+chmod 0755, "run-validator-link";
+system("chown -R rpki-client:rpki-client $state_dir");
+
+1;

@@ -21,12 +21,12 @@ numbers and related transitions.  See
     writing RSA key
     TAL path: /data/repo/005995B51ECFB445FDF5A3038A7472F5CD48BE6C.tal
     TAL path written to /last-tal-path
-    # init-rpki-client /tmp/test last-tal-path 9.0
-    # run-rpki-client /tmp/test
+    # init-validator /tmp/test last-tal-path rpki-client 9.0
+    # run-validator /tmp/test
     # reissue-crl-and-mft --name ta --mft-number 3
-    # run-rpki-client /tmp/test
+    # run-validator /tmp/test
     # reissue-crl-and-mft --name ta --mft-number 2
-    # run-rpki-client /tmp/test
+    # run-validator /tmp/test
     rpki-client: .rsync/localhost/repo/ta/005995B51ECFB445FDF5A3038A7472F5CD48BE6C.mft: unexpected manifest number (want >= #03, got #02)
     rpki-client: localhost/repo/ta/005995B51ECFB445FDF5A3038A7472F5CD48BE6C.mft#03: bad message digest for 005995B51ECFB445FDF5A3038A7472F5CD48BE6C.mft
     rpki-client: localhost/repo/ta/005995B51ECFB445FDF5A3038A7472F5CD48BE6C.mft: no valid manifest available

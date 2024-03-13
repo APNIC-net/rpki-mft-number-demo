@@ -24,7 +24,9 @@ my $output = WriteMakefile(
                            bin/init-routinator
                            bin/run-routinator
                            bin/init-octorpki
-                           bin/run-octorpki) ],
+                           bin/run-octorpki
+                           bin/init-validator
+                           bin/run-validator) ],
     PREREQ_PM      => { 'Test::More'             => 0,
                         'HTTP::Daemon'           => 0,
                         'YAML'                   => 0,
