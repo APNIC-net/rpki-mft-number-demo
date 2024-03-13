@@ -60,6 +60,34 @@ so:
     rpki-client: .rsync/localhost/repo/ta/005995B51ECFB445FDF5A3038A7472F5CD48BE6C.mft: unexpected manifest number (want >= #03, got #02)
     #
 
+### Current results
+
+See [current-results.txt](current-results.txt) for the output from
+running all tests for all configured validators.
+
+#### Summary of current results
+
+ - manifest-number-decrease
+    - FORT, OctoRPKI, Routinator, and rpki-client < 8.7 do not appear
+      to check for this problem.
+    - rpki-client >= 8.7 reports an error when the manifest number
+      decreases.
+ - manifest-number-largest-value
+    - FORT and Routinator report generic errors on attempting to
+      validate a manifest with the largest possible value.
+    - OctoRPKI appears to process the repository successfully, but
+      does not check for reuse of the manifest number.
+    - rpki-client appears to process the repository successfully.  For
+      versions < 8.7, it does not check for reuse of the manifest
+      number, though it does in later versions.
+ - manifest-number-too-large
+    - FORT and Routinator report generic errors on attempting to
+      validate a manifest with a value that is too large.
+    - OctoRPKI does not appear to check for this problem (validates
+      the repository successfully).
+    - rpki-client reports specific errors on attempting to validate a
+      manifest with a value that is too large.
+
 ### Todo
 
  - Documentation/tidying of code.

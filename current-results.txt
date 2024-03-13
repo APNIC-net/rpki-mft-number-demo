@@ -1,0 +1,656 @@
+manifest-number-decrease (fort v1.5.3)
+writing RSA key
+TAL path: /data/repo/3FDB69C626800483B5BD9758308E2D150C044DD5.tal
+TAL path written to /last-tal-path
+Initial validator run:
+Mar 13 23:01:18 INF: Disabling validation logging on syslog.
+Mar 13 23:01:18 INF: Disabling validation logging on standard streams.
+Mar 13 23:01:18 INF: Console log output configured; disabling operation logging on syslog.
+Mar 13 23:01:18 INF: (Operation Logs will be sent to the standard streams only.)
+Mar 13 23:01:18 WRN: The validation has begun.
+Mar 13 23:01:18 WRN: The validation has successfully ended.
+End validator run
+Validator run (manifest number 3):
+Mar 13 23:01:19 INF: Disabling validation logging on syslog.
+Mar 13 23:01:19 INF: Disabling validation logging on standard streams.
+Mar 13 23:01:19 INF: Console log output configured; disabling operation logging on syslog.
+Mar 13 23:01:19 INF: (Operation Logs will be sent to the standard streams only.)
+Mar 13 23:01:19 WRN: The validation has begun.
+Mar 13 23:01:20 WRN: The validation has successfully ended.
+End validator run
+Validator run (manifest number 2):
+Mar 13 23:01:21 INF: Disabling validation logging on syslog.
+Mar 13 23:01:21 INF: Disabling validation logging on standard streams.
+Mar 13 23:01:21 INF: Console log output configured; disabling operation logging on syslog.
+Mar 13 23:01:21 INF: (Operation Logs will be sent to the standard streams only.)
+Mar 13 23:01:21 WRN: The validation has begun.
+Mar 13 23:01:21 WRN: The validation has successfully ended.
+End validator run
+---
+manifest-number-decrease (fort v1.5.4)
+writing RSA key
+TAL path: /data/repo/87F2438FAD2D65A85FAC4FB7CE2CD4EBE1335CB8.tal
+TAL path written to /last-tal-path
+Initial validator run:
+Mar 13 23:01:22 INF: Disabling validation logging on syslog.
+Mar 13 23:01:22 INF: Disabling validation logging on standard streams.
+Mar 13 23:01:22 INF: Console log output configured; disabling operation logging on syslog.
+Mar 13 23:01:22 INF: (Operation Logs will be sent to the standard streams only.)
+Mar 13 23:01:22 WRN: The validation has begun.
+Mar 13 23:01:22 WRN: The validation has successfully ended.
+End validator run
+Validator run (manifest number 3):
+Mar 13 23:01:23 INF: Disabling validation logging on syslog.
+Mar 13 23:01:23 INF: Disabling validation logging on standard streams.
+Mar 13 23:01:23 INF: Console log output configured; disabling operation logging on syslog.
+Mar 13 23:01:23 INF: (Operation Logs will be sent to the standard streams only.)
+Mar 13 23:01:23 WRN: The validation has begun.
+Mar 13 23:01:24 WRN: The validation has successfully ended.
+End validator run
+Validator run (manifest number 2):
+Mar 13 23:01:25 INF: Disabling validation logging on syslog.
+Mar 13 23:01:25 INF: Disabling validation logging on standard streams.
+Mar 13 23:01:25 INF: Console log output configured; disabling operation logging on syslog.
+Mar 13 23:01:25 INF: (Operation Logs will be sent to the standard streams only.)
+Mar 13 23:01:25 WRN: The validation has begun.
+Mar 13 23:01:25 WRN: The validation has successfully ended.
+End validator run
+---
+manifest-number-decrease (fort v1.6.1)
+writing RSA key
+TAL path: /data/repo/580241C088E3AF5C4914031CA770097367FCC1A1.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (manifest number 3):
+End validator run
+Validator run (manifest number 2):
+End validator run
+---
+manifest-number-decrease (octorpki v1.4.3)
+writing RSA key
+TAL path: /data/repo/07AF2E0FBAF07A2F056DD1D9056CCC7868CB569D.tal
+TAL path written to /last-tal-path
+Initial validator run:
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Root certificate for tals/tal.tal will be downloaded using rsync: rsync://localhost/repo/07AF2E0FBAF07A2F056DD1D9056CCC7868CB569D.cer
+INFO[0000] Rsync sync rsync://localhost/repo/07AF2E0FBAF07A2F056DD1D9056CCC7868CB569D.cer
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Rsync sync rsync://localhost/repo
+INFO[0000] Rsync sync rsync://localhost/repo/07AF2E0FBAF07A2F056DD1D9056CCC7868CB569D.cer
+INFO[0000] Stable, terminating
+End validator run
+Validator run (manifest number 3):
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Rsync sync rsync://localhost/repo
+INFO[0000] Stable, terminating
+End validator run
+Validator run (manifest number 2):
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Rsync sync rsync://localhost/repo
+INFO[0000] Stable, terminating
+End validator run
+---
+manifest-number-decrease (octorpki v1.4.4)
+writing RSA key
+TAL path: /data/repo/DE812C26C9ABC9EEB1E266902640A43A39D102B8.tal
+TAL path written to /last-tal-path
+Initial validator run:
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Root certificate for tals/tal.tal will be downloaded using rsync: rsync://localhost/repo/DE812C26C9ABC9EEB1E266902640A43A39D102B8.cer
+INFO[0000] Rsync sync rsync://localhost/repo/DE812C26C9ABC9EEB1E266902640A43A39D102B8.cer
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Rsync sync rsync://localhost/repo
+INFO[0000] Rsync sync rsync://localhost/repo/DE812C26C9ABC9EEB1E266902640A43A39D102B8.cer
+INFO[0000] Stable, terminating
+End validator run
+Validator run (manifest number 3):
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Rsync sync rsync://localhost/repo
+INFO[0000] Stable, terminating
+End validator run
+Validator run (manifest number 2):
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Rsync sync rsync://localhost/repo
+ERRO[0000] file error for certificate: Unable to read file "cache/localhost/repo/svaoxcc6/DE812C26C9ABC9EEB1E266902640A43A39D102B8.mft": open cache/localhost/repo/svaoxcc6/DE812C26C9ABC9EEB1E266902640A43A39D102B8.mft: no such file or directory
+INFO[0000] Stable, terminating
+End validator run
+---
+manifest-number-decrease (octorpki v1.5.10)
+writing RSA key
+TAL path: /data/repo/03B75440C3151CE77B7288384B89E99F6CE0D80C.tal
+TAL path written to /last-tal-path
+Initial validator run:
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Root certificate for tals/tal.tal will be downloaded using rsync: rsync://localhost/repo/03B75440C3151CE77B7288384B89E99F6CE0D80C.cer
+INFO[0000] Rsync sync rsync://localhost/repo/03B75440C3151CE77B7288384B89E99F6CE0D80C.cer
+INFO[0000] Stable, terminating
+End validator run
+Validator run (manifest number 3):
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Root certificate for tals/tal.tal will be downloaded using rsync: rsync://localhost/repo/03B75440C3151CE77B7288384B89E99F6CE0D80C.cer
+INFO[0000] Rsync sync rsync://localhost/repo/03B75440C3151CE77B7288384B89E99F6CE0D80C.cer
+INFO[0000] Stable, terminating
+End validator run
+Validator run (manifest number 2):
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Root certificate for tals/tal.tal will be downloaded using rsync: rsync://localhost/repo/03B75440C3151CE77B7288384B89E99F6CE0D80C.cer
+INFO[0000] Rsync sync rsync://localhost/repo/03B75440C3151CE77B7288384B89E99F6CE0D80C.cer
+INFO[0000] Stable, terminating
+End validator run
+---
+manifest-number-decrease (routinator v0.11.0)
+writing RSA key
+TAL path: /data/repo/B774F3589EF5B18B1EC1503015BC6F4033E49186.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (manifest number 3):
+End validator run
+Validator run (manifest number 2):
+End validator run
+---
+manifest-number-decrease (routinator v0.12.0)
+writing RSA key
+TAL path: /data/repo/D8845A2C60B00E0763C880A525510ABE149FD028.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (manifest number 3):
+End validator run
+Validator run (manifest number 2):
+End validator run
+---
+manifest-number-decrease (routinator v0.13.2)
+writing RSA key
+TAL path: /data/repo/7ADF3AD38F569D03A629A6D96D32451AF7C5837B.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (manifest number 3):
+End validator run
+Validator run (manifest number 2):
+End validator run
+---
+manifest-number-decrease (rpki-client v7.0)
+writing RSA key
+TAL path: /data/repo/5845BF4E1B6A02793A2C29C1559902426391FED0.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (manifest number 3):
+End validator run
+Validator run (manifest number 2):
+End validator run
+---
+manifest-number-decrease (rpki-client v8.7)
+writing RSA key
+TAL path: /data/repo/1A878D22F15731E94E85524EFA36E56E81FFE9CA.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (manifest number 3):
+End validator run
+Validator run (manifest number 2):
+rpki-client: .rsync/localhost/repo/u1shdr4h/1A878D22F15731E94E85524EFA36E56E81FFE9CA.mft: unexpected manifest number (want >= #03, got #02)
+End validator run
+---
+manifest-number-decrease (rpki-client v9.0)
+writing RSA key
+TAL path: /data/repo/B6000D3D572394C07ED7A4384E3B45F4D1AA54E4.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (manifest number 3):
+End validator run
+Validator run (manifest number 2):
+rpki-client: .rsync/localhost/repo/kq6gokcf/B6000D3D572394C07ED7A4384E3B45F4D1AA54E4.mft: unexpected manifest number (want >= #03, got #02)
+End validator run
+---
+manifest-number-largest-value (fort v1.5.3)
+writing RSA key
+TAL path: /data/repo/AC30457058E14956F83BD7C516FFD3C2A9D1D9ED.tal
+TAL path written to /last-tal-path
+Initial validator run:
+Mar 13 23:02:03 INF: Disabling validation logging on syslog.
+Mar 13 23:02:03 INF: Disabling validation logging on standard streams.
+Mar 13 23:02:03 INF: Console log output configured; disabling operation logging on syslog.
+Mar 13 23:02:03 INF: (Operation Logs will be sent to the standard streams only.)
+Mar 13 23:02:03 WRN: The validation has begun.
+Mar 13 23:02:03 WRN: The validation has successfully ended.
+End validator run
+Validator run (largest possible manifest number value):
+Mar 13 23:02:05 INF: Disabling validation logging on syslog.
+Mar 13 23:02:05 INF: Disabling validation logging on standard streams.
+Mar 13 23:02:05 INF: Console log output configured; disabling operation logging on syslog.
+Mar 13 23:02:05 INF: (Operation Logs will be sent to the standard streams only.)
+Mar 13 23:02:05 WRN: The validation has begun.
+Mar 13 23:02:05 WRN: Validation from TAL '/tmp/3ozsbqef/tals/tal.tal' yielded error, discarding any other validation results.
+Mar 13 23:02:05 ERR: First validation wasn't successful.
+Stack trace:
+  /opt/fort-1.5.3/bin/fort(print_stack_trace+0x39) [0x558e82da9909]
+  /opt/fort-1.5.3/bin/fort(__pr_op_err+0xb3) [0x558e82daa053]
+  /opt/fort-1.5.3/bin/fort(main+0x146) [0x558e82da55e6]
+  /lib/x86_64-linux-gnu/libc.so.6(+0x23a90) [0x7fce893cda90]
+  /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x89) [0x7fce893cdb49]
+  /opt/fort-1.5.3/bin/fort(_start+0x25) [0x558e82da56b5]
+(End of stack trace)
+End validator run
+Validator run (largest possible manifest number value reused):
+Mar 13 23:02:07 INF: Disabling validation logging on syslog.
+Mar 13 23:02:07 INF: Disabling validation logging on standard streams.
+Mar 13 23:02:07 INF: Console log output configured; disabling operation logging on syslog.
+Mar 13 23:02:07 INF: (Operation Logs will be sent to the standard streams only.)
+Mar 13 23:02:07 WRN: The validation has begun.
+Mar 13 23:02:07 WRN: Validation from TAL '/tmp/3ozsbqef/tals/tal.tal' yielded error, discarding any other validation results.
+Mar 13 23:02:07 ERR: First validation wasn't successful.
+Stack trace:
+  /opt/fort-1.5.3/bin/fort(print_stack_trace+0x39) [0x562e385bb909]
+  /opt/fort-1.5.3/bin/fort(__pr_op_err+0xb3) [0x562e385bc053]
+  /opt/fort-1.5.3/bin/fort(main+0x146) [0x562e385b75e6]
+  /lib/x86_64-linux-gnu/libc.so.6(+0x23a90) [0x7f32f3fc8a90]
+  /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x89) [0x7f32f3fc8b49]
+  /opt/fort-1.5.3/bin/fort(_start+0x25) [0x562e385b76b5]
+(End of stack trace)
+End validator run
+---
+manifest-number-largest-value (fort v1.5.4)
+writing RSA key
+TAL path: /data/repo/CB286654A863BFC83ECE745ED6BBAB1DDDE136C4.tal
+TAL path written to /last-tal-path
+Initial validator run:
+Mar 13 23:02:07 INF: Disabling validation logging on syslog.
+Mar 13 23:02:07 INF: Disabling validation logging on standard streams.
+Mar 13 23:02:07 INF: Console log output configured; disabling operation logging on syslog.
+Mar 13 23:02:07 INF: (Operation Logs will be sent to the standard streams only.)
+Mar 13 23:02:07 WRN: The validation has begun.
+Mar 13 23:02:08 WRN: The validation has successfully ended.
+End validator run
+Validator run (largest possible manifest number value):
+Mar 13 23:02:09 INF: Disabling validation logging on syslog.
+Mar 13 23:02:09 INF: Disabling validation logging on standard streams.
+Mar 13 23:02:09 INF: Console log output configured; disabling operation logging on syslog.
+Mar 13 23:02:09 INF: (Operation Logs will be sent to the standard streams only.)
+Mar 13 23:02:09 WRN: The validation has begun.
+Mar 13 23:02:10 WRN: Validation from TAL '/tmp/4uoi0bny/tals/tal.tal' yielded error, discarding any other validation results.
+Mar 13 23:02:10 ERR: First validation wasn't successful.
+End validator run
+Validator run (largest possible manifest number value reused):
+Mar 13 23:02:11 INF: Disabling validation logging on syslog.
+Mar 13 23:02:11 INF: Disabling validation logging on standard streams.
+Mar 13 23:02:11 INF: Console log output configured; disabling operation logging on syslog.
+Mar 13 23:02:11 INF: (Operation Logs will be sent to the standard streams only.)
+Mar 13 23:02:11 WRN: The validation has begun.
+Mar 13 23:02:11 WRN: Validation from TAL '/tmp/4uoi0bny/tals/tal.tal' yielded error, discarding any other validation results.
+Mar 13 23:02:11 ERR: First validation wasn't successful.
+End validator run
+---
+manifest-number-largest-value (fort v1.6.1)
+writing RSA key
+TAL path: /data/repo/00F94423A6ED884435F8A1DCA7E42216825CA244.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (largest possible manifest number value):
+Mar 13 23:02:14 ERR: /tmp/iujnm8mg/tals/tal.tal: None of the URIs of the TAL '/tmp/iujnm8mg/tals/tal.tal' yielded a successful traversal.
+Mar 13 23:02:14 WRN: Validation from TAL '/tmp/iujnm8mg/tals/tal.tal' yielded error -22 (Invalid argument); discarding all validation results.
+Mar 13 23:02:14 ERR: Validation unsuccessful; results unusable.
+End validator run
+Validator run (largest possible manifest number value reused):
+Mar 13 23:02:15 ERR: /tmp/iujnm8mg/tals/tal.tal: None of the URIs of the TAL '/tmp/iujnm8mg/tals/tal.tal' yielded a successful traversal.
+Mar 13 23:02:15 WRN: Validation from TAL '/tmp/iujnm8mg/tals/tal.tal' yielded error -22 (Invalid argument); discarding all validation results.
+Mar 13 23:02:15 ERR: Validation unsuccessful; results unusable.
+End validator run
+---
+manifest-number-largest-value (octorpki v1.4.3)
+writing RSA key
+TAL path: /data/repo/74BDE4FF163FAB0726445DBD3783F9C69AF7877B.tal
+TAL path written to /last-tal-path
+Initial validator run:
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Root certificate for tals/tal.tal will be downloaded using rsync: rsync://localhost/repo/74BDE4FF163FAB0726445DBD3783F9C69AF7877B.cer
+INFO[0000] Rsync sync rsync://localhost/repo/74BDE4FF163FAB0726445DBD3783F9C69AF7877B.cer
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Rsync sync rsync://localhost/repo/74BDE4FF163FAB0726445DBD3783F9C69AF7877B.cer
+INFO[0000] Rsync sync rsync://localhost/repo
+INFO[0000] Stable, terminating
+End validator run
+Validator run (largest possible manifest number value):
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Rsync sync rsync://localhost/repo
+INFO[0000] Stable, terminating
+End validator run
+Validator run (largest possible manifest number value reused):
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Rsync sync rsync://localhost/repo
+INFO[0000] Stable, terminating
+End validator run
+---
+manifest-number-largest-value (octorpki v1.4.4)
+writing RSA key
+TAL path: /data/repo/14BC440650736F4B8004A841243BE265D58D323B.tal
+TAL path written to /last-tal-path
+Initial validator run:
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Root certificate for tals/tal.tal will be downloaded using rsync: rsync://localhost/repo/14BC440650736F4B8004A841243BE265D58D323B.cer
+INFO[0000] Rsync sync rsync://localhost/repo/14BC440650736F4B8004A841243BE265D58D323B.cer
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Rsync sync rsync://localhost/repo
+INFO[0000] Rsync sync rsync://localhost/repo/14BC440650736F4B8004A841243BE265D58D323B.cer
+ERRO[0000] file error for certificate: Unable to read file "cache/localhost/repo/lo4zdieo/14BC440650736F4B8004A841243BE265D58D323B.mft": open cache/localhost/repo/lo4zdieo/14BC440650736F4B8004A841243BE265D58D323B.mft: no such file or directory
+INFO[0000] Stable, terminating
+End validator run
+Validator run (largest possible manifest number value):
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Rsync sync rsync://localhost/repo
+ERRO[0000] file error for certificate: Unable to read file "cache/localhost/repo/lo4zdieo/14BC440650736F4B8004A841243BE265D58D323B.mft": open cache/localhost/repo/lo4zdieo/14BC440650736F4B8004A841243BE265D58D323B.mft: no such file or directory
+INFO[0000] Stable, terminating
+End validator run
+Validator run (largest possible manifest number value reused):
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Rsync sync rsync://localhost/repo
+ERRO[0000] file error for certificate: Unable to read file "cache/localhost/repo/lo4zdieo/14BC440650736F4B8004A841243BE265D58D323B.mft": open cache/localhost/repo/lo4zdieo/14BC440650736F4B8004A841243BE265D58D323B.mft: no such file or directory
+INFO[0000] Stable, terminating
+End validator run
+---
+manifest-number-largest-value (octorpki v1.5.10)
+writing RSA key
+TAL path: /data/repo/810069BDC7D1E1CC0A60C4034C09DDE231307C39.tal
+TAL path written to /last-tal-path
+Initial validator run:
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Root certificate for tals/tal.tal will be downloaded using rsync: rsync://localhost/repo/810069BDC7D1E1CC0A60C4034C09DDE231307C39.cer
+INFO[0000] Rsync sync rsync://localhost/repo/810069BDC7D1E1CC0A60C4034C09DDE231307C39.cer
+INFO[0000] Stable, terminating
+End validator run
+Validator run (largest possible manifest number value):
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Root certificate for tals/tal.tal will be downloaded using rsync: rsync://localhost/repo/810069BDC7D1E1CC0A60C4034C09DDE231307C39.cer
+INFO[0000] Rsync sync rsync://localhost/repo/810069BDC7D1E1CC0A60C4034C09DDE231307C39.cer
+INFO[0000] Stable, terminating
+End validator run
+Validator run (largest possible manifest number value reused):
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Root certificate for tals/tal.tal will be downloaded using rsync: rsync://localhost/repo/810069BDC7D1E1CC0A60C4034C09DDE231307C39.cer
+INFO[0000] Rsync sync rsync://localhost/repo/810069BDC7D1E1CC0A60C4034C09DDE231307C39.cer
+INFO[0000] Stable, terminating
+End validator run
+---
+manifest-number-largest-value (routinator v0.11.0)
+writing RSA key
+TAL path: /data/repo/33816C2CB9656905D536015B74D6AE8CF6C9B3BE.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (largest possible manifest number value):
+[2024-03-13 23:02:28] routinator::engine rsync://localhost/repo/ii98ikha/33816C2CB9656905D536015B74D6AE8CF6C9B3BE.mft: failed to decode
+End validator run
+Validator run (largest possible manifest number value reused):
+[2024-03-13 23:02:29] routinator::engine rsync://localhost/repo/ii98ikha/33816C2CB9656905D536015B74D6AE8CF6C9B3BE.mft: failed to decode
+End validator run
+---
+manifest-number-largest-value (routinator v0.12.0)
+writing RSA key
+TAL path: /data/repo/C793C59812C0779202E3781661F25ECCA779435D.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (largest possible manifest number value):
+[2024-03-13 23:02:32] [WARN] rsync://localhost/repo/rqblh62c/C793C59812C0779202E3781661F25ECCA779435D.mft: serial number longer than 20 bytes (at position 3).
+End validator run
+Validator run (largest possible manifest number value reused):
+[2024-03-13 23:02:33] [WARN] rsync://localhost/repo/rqblh62c/C793C59812C0779202E3781661F25ECCA779435D.mft: serial number longer than 20 bytes (at position 3).
+End validator run
+---
+manifest-number-largest-value (routinator v0.13.2)
+writing RSA key
+TAL path: /data/repo/7D1D4374BFE5A78CCA6A3F7895561527B25E64E1.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (largest possible manifest number value):
+[2024-03-13T23:02:35] [WARN] rsync://localhost/repo/elctfiab/7D1D4374BFE5A78CCA6A3F7895561527B25E64E1.mft: failed to decode manifest.
+End validator run
+Validator run (largest possible manifest number value reused):
+[2024-03-13T23:02:37] [WARN] rsync://localhost/repo/elctfiab/7D1D4374BFE5A78CCA6A3F7895561527B25E64E1.mft: failed to decode manifest.
+End validator run
+---
+manifest-number-largest-value (rpki-client v7.0)
+writing RSA key
+TAL path: /data/repo/220358DAADAEF24E4A8EB2364438A16A17FF72D7.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (largest possible manifest number value):
+End validator run
+Validator run (largest possible manifest number value reused):
+End validator run
+---
+manifest-number-largest-value (rpki-client v8.7)
+writing RSA key
+TAL path: /data/repo/8CE8DAAD9F36F8010BF9179CF7C6730FC14281F4.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (largest possible manifest number value):
+End validator run
+Validator run (largest possible manifest number value reused):
+rpki-client: .rsync/localhost/repo/7siiq0qz/8CE8DAAD9F36F8010BF9179CF7C6730FC14281F4.mft: manifest misissuance, #FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF was recycled
+End validator run
+---
+manifest-number-largest-value (rpki-client v9.0)
+writing RSA key
+TAL path: /data/repo/FDCA3F933C7F8FC0ADDF20284645B73CA45CDE7C.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (largest possible manifest number value):
+End validator run
+Validator run (largest possible manifest number value reused):
+rpki-client: .rsync/localhost/repo/ehglhbjc/FDCA3F933C7F8FC0ADDF20284645B73CA45CDE7C.mft: manifest issued at 1710370968 and 1710370967 with same manifest number #FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+End validator run
+---
+manifest-number-too-large (fort v1.5.3)
+writing RSA key
+TAL path: /data/repo/718EF1B6BE4AAE21DCE85E346C31164EF441C998.tal
+TAL path written to /last-tal-path
+Initial validator run:
+Mar 13 23:02:49 INF: Disabling validation logging on syslog.
+Mar 13 23:02:49 INF: Disabling validation logging on standard streams.
+Mar 13 23:02:49 INF: Console log output configured; disabling operation logging on syslog.
+Mar 13 23:02:49 INF: (Operation Logs will be sent to the standard streams only.)
+Mar 13 23:02:49 WRN: The validation has begun.
+Mar 13 23:02:49 WRN: The validation has successfully ended.
+End validator run
+Validator run (manifest number value is too large):
+Mar 13 23:02:51 INF: Disabling validation logging on syslog.
+Mar 13 23:02:51 INF: Disabling validation logging on standard streams.
+Mar 13 23:02:51 INF: Console log output configured; disabling operation logging on syslog.
+Mar 13 23:02:51 INF: (Operation Logs will be sent to the standard streams only.)
+Mar 13 23:02:51 WRN: The validation has begun.
+Mar 13 23:02:51 WRN: Validation from TAL '/tmp/bwx4ldqo/tals/tal.tal' yielded error, discarding any other validation results.
+Mar 13 23:02:51 ERR: First validation wasn't successful.
+Stack trace:
+  /opt/fort-1.5.3/bin/fort(print_stack_trace+0x39) [0x555a87655909]
+  /opt/fort-1.5.3/bin/fort(__pr_op_err+0xb3) [0x555a87656053]
+  /opt/fort-1.5.3/bin/fort(main+0x146) [0x555a876515e6]
+  /lib/x86_64-linux-gnu/libc.so.6(+0x23a90) [0x7f94f9b10a90]
+  /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x89) [0x7f94f9b10b49]
+  /opt/fort-1.5.3/bin/fort(_start+0x25) [0x555a876516b5]
+(End of stack trace)
+End validator run
+---
+manifest-number-too-large (fort v1.5.4)
+writing RSA key
+TAL path: /data/repo/8D736BBD460D653FF2BFE41610B61AE9F9E3A3CD.tal
+TAL path written to /last-tal-path
+Initial validator run:
+Mar 13 23:02:52 INF: Disabling validation logging on syslog.
+Mar 13 23:02:52 INF: Disabling validation logging on standard streams.
+Mar 13 23:02:52 INF: Console log output configured; disabling operation logging on syslog.
+Mar 13 23:02:52 INF: (Operation Logs will be sent to the standard streams only.)
+Mar 13 23:02:52 WRN: The validation has begun.
+Mar 13 23:02:52 WRN: The validation has successfully ended.
+End validator run
+Validator run (manifest number value is too large):
+Mar 13 23:02:53 INF: Disabling validation logging on syslog.
+Mar 13 23:02:53 INF: Disabling validation logging on standard streams.
+Mar 13 23:02:53 INF: Console log output configured; disabling operation logging on syslog.
+Mar 13 23:02:53 INF: (Operation Logs will be sent to the standard streams only.)
+Mar 13 23:02:53 WRN: The validation has begun.
+Mar 13 23:02:54 WRN: Validation from TAL '/tmp/8g5id3s6/tals/tal.tal' yielded error, discarding any other validation results.
+Mar 13 23:02:54 ERR: First validation wasn't successful.
+End validator run
+---
+manifest-number-too-large (fort v1.6.1)
+writing RSA key
+TAL path: /data/repo/84A61CD82F48FBC6E26C5F1133806449D100D231.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (manifest number value is too large):
+Mar 13 23:02:56 ERR: /tmp/em2x13bx/tals/tal.tal: None of the URIs of the TAL '/tmp/em2x13bx/tals/tal.tal' yielded a successful traversal.
+Mar 13 23:02:56 WRN: Validation from TAL '/tmp/em2x13bx/tals/tal.tal' yielded error -22 (Invalid argument); discarding all validation results.
+Mar 13 23:02:56 ERR: Validation unsuccessful; results unusable.
+End validator run
+---
+manifest-number-too-large (octorpki v1.4.3)
+writing RSA key
+TAL path: /data/repo/3632A67F818D4810CB1A4456DCB98D569133DC4C.tal
+TAL path written to /last-tal-path
+Initial validator run:
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Root certificate for tals/tal.tal will be downloaded using rsync: rsync://localhost/repo/3632A67F818D4810CB1A4456DCB98D569133DC4C.cer
+INFO[0000] Rsync sync rsync://localhost/repo/3632A67F818D4810CB1A4456DCB98D569133DC4C.cer
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Rsync sync rsync://localhost/repo/3632A67F818D4810CB1A4456DCB98D569133DC4C.cer
+INFO[0000] Rsync sync rsync://localhost/repo
+INFO[0000] Stable, terminating
+End validator run
+Validator run (manifest number value is too large):
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Rsync sync rsync://localhost/repo
+INFO[0000] Stable, terminating
+End validator run
+---
+manifest-number-too-large (octorpki v1.4.4)
+writing RSA key
+TAL path: /data/repo/FEDE2087E1148BB94A613A43A58A7A2D377C38B9.tal
+TAL path written to /last-tal-path
+Initial validator run:
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Root certificate for tals/tal.tal will be downloaded using rsync: rsync://localhost/repo/FEDE2087E1148BB94A613A43A58A7A2D377C38B9.cer
+INFO[0000] Rsync sync rsync://localhost/repo/FEDE2087E1148BB94A613A43A58A7A2D377C38B9.cer
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Rsync sync rsync://localhost/repo/FEDE2087E1148BB94A613A43A58A7A2D377C38B9.cer
+INFO[0000] Rsync sync rsync://localhost/repo
+ERRO[0000] file error for certificate: Unable to read file "cache/localhost/repo/tcv7zbug/FEDE2087E1148BB94A613A43A58A7A2D377C38B9.mft": open cache/localhost/repo/tcv7zbug/FEDE2087E1148BB94A613A43A58A7A2D377C38B9.mft: no such file or directory
+INFO[0000] Stable, terminating
+End validator run
+Validator run (manifest number value is too large):
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Rsync sync rsync://localhost/repo
+INFO[0000] Stable, terminating
+End validator run
+---
+manifest-number-too-large (octorpki v1.5.10)
+writing RSA key
+TAL path: /data/repo/625B30EB43F3D7D65B1FC1346F4F8D88B5B3E24E.tal
+TAL path written to /last-tal-path
+Initial validator run:
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Root certificate for tals/tal.tal will be downloaded using rsync: rsync://localhost/repo/625B30EB43F3D7D65B1FC1346F4F8D88B5B3E24E.cer
+INFO[0000] Rsync sync rsync://localhost/repo/625B30EB43F3D7D65B1FC1346F4F8D88B5B3E24E.cer
+INFO[0000] Stable, terminating
+End validator run
+Validator run (manifest number value is too large):
+INFO[0000] Validator started
+INFO[0000] Still exploring. Revalidating now
+INFO[0000] Root certificate for tals/tal.tal will be downloaded using rsync: rsync://localhost/repo/625B30EB43F3D7D65B1FC1346F4F8D88B5B3E24E.cer
+INFO[0000] Rsync sync rsync://localhost/repo/625B30EB43F3D7D65B1FC1346F4F8D88B5B3E24E.cer
+INFO[0000] Stable, terminating
+End validator run
+---
+manifest-number-too-large (routinator v0.11.0)
+writing RSA key
+TAL path: /data/repo/09C8C07421997B1706BB859528F924B15C49570A.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (manifest number value is too large):
+[2024-03-13 23:03:04] routinator::engine rsync://localhost/repo/e6wc9qb4/09C8C07421997B1706BB859528F924B15C49570A.mft: failed to decode
+End validator run
+---
+manifest-number-too-large (routinator v0.12.0)
+writing RSA key
+TAL path: /data/repo/E72565AADAF1707ACA54A7F12EABC3D17F12804A.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (manifest number value is too large):
+[2024-03-13 23:03:06] [WARN] rsync://localhost/repo/a1kvt07y/E72565AADAF1707ACA54A7F12EABC3D17F12804A.mft: serial number longer than 20 bytes (at position 3).
+End validator run
+---
+manifest-number-too-large (routinator v0.13.2)
+writing RSA key
+TAL path: /data/repo/A0ACEF1E5BE2FF89EB5639309360423EDCC44B82.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (manifest number value is too large):
+[2024-03-13T23:03:08] [WARN] rsync://localhost/repo/un5gjit1/A0ACEF1E5BE2FF89EB5639309360423EDCC44B82.mft: failed to decode manifest.
+End validator run
+---
+manifest-number-too-large (rpki-client v7.0)
+writing RSA key
+TAL path: /data/repo/A740913D417B7C4F29DA74278EFC10C89345A926.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (manifest number value is too large):
+rpki-client: rsync/localhost/repo/ppk25hw7/A740913D417B7C4F29DA74278EFC10C89345A926.mft: RFC 6486 section 4.2.1: manifestNumber: want 20 or less than octets, have more.
+End validator run
+---
+manifest-number-too-large (rpki-client v8.7)
+writing RSA key
+TAL path: /data/repo/C05090D3CF0BE7662621C0C2498FD9021132985C.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (manifest number value is too large):
+rpki-client: x509_convert_seqnum: .rsync/localhost/repo/o7o2vgfa/C05090D3CF0BE7662621C0C2498FD9021132985C.mft: want 20 octets or fewer, have more.
+End validator run
+---
+manifest-number-too-large (rpki-client v9.0)
+writing RSA key
+TAL path: /data/repo/5D899FD59AFCCD1010B0D187BF797623CD6DCE48.tal
+TAL path written to /last-tal-path
+Initial validator run:
+End validator run
+Validator run (manifest number value is too large):
+rpki-client: x509_convert_seqnum: .rsync/localhost/repo/qll471lh/5D899FD59AFCCD1010B0D187BF797623CD6DCE48.mft: want 20 octets or fewer, have more.
+End validator run
+---
