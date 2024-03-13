@@ -1,0 +1,38 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+use APNIC::RPKI::CA;
+
+use Cwd;
+use File::Slurp qw(write_file);
+use Getopt::Long;
+
+sub usage
+{
+    print <<EOF;
+Usage:
+$0 --name {ca-name} [--mft-number {mft-number}]
+
+Reissue the CRL and manifest for the given CA.
+EOF
+
+    exit(10);
+}
+
+my %options;
+GetOptions(\%options, 'name=s', 'mft-number=s');
+if (not $options{'name'}) {
+    print "Please enter a name.\n";
+    usage();
+}
+
+my ($name, $mft_number) =
+    @options{qw(name mft-number)};
+
+my $path = "/data/cas/$name";
+my $ca = APNIC::RPKI::CA->new(ca_path => $path);
+$ca->publish($mft_number);
+
+1;
