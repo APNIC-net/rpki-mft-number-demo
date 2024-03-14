@@ -13,7 +13,8 @@ my %validators = (
 );
 
 my %test_name_to_fn = (
-    'manifest-number-decrease'      => \&manifest_number_decrease,
+    'manifest-number-reuse'         => \&manifest_number_reuse,
+    'manifest-number-regression'    => \&manifest_number_regression,
     'manifest-number-largest-value' => \&manifest_number_largest_value,
     'manifest-number-too-large'     => \&manifest_number_too_large,
 );
@@ -22,14 +23,14 @@ sub make_random_string
 {
     my @chars = ('a'..'z', 0..9);
 
-    return join '', map { $chars[int(rand(@chars))] } (1..8);    
+    return join '', map { $chars[int(rand(@chars))] } (1..8);
 }
 
-sub manifest_number_decrease
+sub manifest_number_reuse
 {
     my ($validator_name, $validator_version) = @_;
 
-    print "manifest-number-decrease ($validator_name v$validator_version)\n";
+    print "manifest-number-reuse ($validator_name v$validator_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 1234");
@@ -41,7 +42,31 @@ sub manifest_number_decrease
     system("run-validator $vp");
     print "End validator run\n";
     sleep(1);
-    
+
+    system("reissue-crl-and-mft --name $ta_name --mft-number 1");
+    print "Validator run (reused manifest number 1):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
+sub manifest_number_regression
+{
+    my ($validator_name, $validator_version) = @_;
+
+    print "manifest-number-regression ($validator_name v$validator_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
     system("reissue-crl-and-mft --name $ta_name --mft-number 3");
     print "Validator run (manifest number 3):\n";
     system("run-validator $vp");
@@ -71,15 +96,9 @@ sub manifest_number_largest_value
     system("run-validator $vp");
     print "End validator run\n";
     sleep(1);
-    
-    system("reissue-crl-and-mft --name $ta_name --mft-number 1461501637330902918203684832716283019655932542975");
-    print "Validator run (largest possible manifest number value):\n";
-    system("run-validator $vp");
-    print "End validator run\n";
-    sleep(1);
 
     system("reissue-crl-and-mft --name $ta_name --mft-number 1461501637330902918203684832716283019655932542975");
-    print "Validator run (largest possible manifest number value reused):\n";
+    print "Validator run (largest possible manifest number value):\n";
     system("run-validator $vp");
     print "End validator run\n";
     print "---\n";
@@ -101,7 +120,7 @@ sub manifest_number_too_large
     system("run-validator $vp");
     print "End validator run\n";
     sleep(1);
-    
+
     system("reissue-crl-and-mft --name $ta_name --mft-number 1461501637330902918203684832716283019655932542976");
     print "Validator run (manifest number value is too large):\n";
     system("run-validator $vp");
@@ -113,9 +132,10 @@ if (not @ARGV) {
     print "Usage: $0 {test-name} {validator-name} {validator-version}\n";
     print "\n";
     print "Test names:\n";
-    for my $test_name (sort keys %test_name_to_fn) {
-        print "  - $test_name\n";
-    }
+    print "  - manifest-number-reuse\n";
+    print "  - manifest-number-regression\n";
+    print "  - manifest-number-largest-value\n";
+    print "  - manifest-number-too-large\n";
     print "Validators:\n";
     for my $name (sort keys %validators) {
         my @versions = @{$validators{$name}};
@@ -133,7 +153,12 @@ my ($test_name, $validator_name, $validator_version) = @ARGV;
 
 my @test_fns;
 if ($test_name eq 'all') {
-    @test_fns = @test_name_to_fn{sort keys %test_name_to_fn};
+    @test_fns = @test_name_to_fn{qw(
+        manifest-number-reuse
+        manifest-number-regression
+        manifest-number-largest-value
+        manifest-number-too-large
+    )};
 } else {
     my $test_fn = $test_name_to_fn{$test_name};
     if (not $test_fn) {

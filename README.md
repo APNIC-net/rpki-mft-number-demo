@@ -15,7 +15,8 @@ numbers and related transitions.  See
     Usage: /usr/local/bin/run-test {test-name} {validator-name} {validator-version}
 
     Test names:
-      - manifest-number-decrease
+      - manifest-number-reuse
+      - manifest-number-regression
       - manifest-number-largest-value
       - manifest-number-too-large
     Validators:
@@ -43,7 +44,7 @@ numbers and related transitions.  See
     #
 
 Various commands are provided for writing the tests.  For example,
-`manifest-number-decrease` can be stepped through in more detail like
+`manifest-number-regression` can be stepped through in more detail like
 so:
 
     # /sbin/service rsync start
@@ -67,19 +68,15 @@ running all tests for all configured validators.
 
 #### Summary of current results
 
- - manifest-number-decrease
+ - manifest-number-reuse, manifest-number-regression
     - FORT, OctoRPKI, Routinator, and rpki-client < 8.7 do not appear
-      to check for this problem.
-    - rpki-client >= 8.7 reports an error when the manifest number
-      decreases.
+      to check for these problems.
+    - rpki-client >= 8.7 reports errors for these problems.
  - manifest-number-largest-value
     - FORT and Routinator report generic errors on attempting to
       validate a manifest with the largest possible value.
-    - OctoRPKI appears to process the repository successfully, but
-      does not check for reuse of the manifest number.
-    - rpki-client appears to process the repository successfully.  For
-      versions < 8.7, it does not check for reuse of the manifest
-      number, though it does in later versions.
+    - OctoRPKI appears to process the repository successfully.
+    - rpki-client appears to process the repository successfully.
  - manifest-number-too-large
     - FORT and Routinator report generic errors on attempting to
       validate a manifest with a value that is too large.
