@@ -9,6 +9,10 @@ use POSIX qw();
 my ($state_dir) = @ARGV;
 
 chdir $state_dir;
-system("sudo -u rpki-client ./run-validator-link");
+if (-e "$state_dir/deb.properties" or -e "ripe-validator") {
+    system("./run-validator-link");
+} else {
+    system("sudo -u rpki-client ./run-validator-link");
+}
 
 1;

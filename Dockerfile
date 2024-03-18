@@ -137,8 +137,36 @@ RUN mkdir -p /opt/octorpki-1.4.3/bin
 RUN wget https://github.com/cloudflare/cfrpki/releases/download/v1.4.3/octorpki-v1.4.3-linux-x86_64 -O /opt/octorpki-1.4.3/bin/octorpki
 RUN chmod 755 /opt/octorpki-1.4.3/bin/octorpki
 
+RUN wget https://github.com/RIPE-NCC/rpki-validator-3/archive/refs/tags/3.2-2021.04.07.12.55.tar.gz
+RUN apt-get install -y unzip zip rpm
+
+SHELL ["/bin/bash", "-c"] 
+RUN curl -s "https://get.sdkman.io" | bash
+RUN mkdir -p /opt/ripe-validator-3/3.2-2021.04.07.12.55
+RUN source "/root/.sdkman/bin/sdkman-init.sh" \
+    && sdk install java 8.0.392-tem \
+    && sdk install maven 3.9.6
+
+RUN tar xf 3.2-2021.04.07.12.55.tar.gz \
+    && cd ./rpki-validator-3-3.2-2021.04.07.12.55 \
+    && cd rpki-validator \
+    && source "/root/.sdkman/bin/sdkman-init.sh" \
+    && sdk use java 8.0.392-tem \
+    && sdk use maven 3.9.6 \
+    && mvn install -Dmaven.test.skip=true
+
+RUN wget https://github.com/RIPE-NCC/rpki-validator/archive/refs/tags/rpki-validator-2.24.tar.gz
+RUN tar xf rpki-validator-2.24.tar.gz \
+    && cd ./rpki-validator-rpki-validator-2.24/rpki-validator-cli \
+    && source "/root/.sdkman/bin/sdkman-init.sh" \
+    && sdk use java 8.0.392-tem \
+    && sdk use maven 3.9.6 \
+    && mvn install -Dmaven.test.skip=true
+
+RUN echo 'source /root/.sdkman/bin/sdkman-init.sh' >> root/.bashrc
 COPY . /root/rpki-mft-number-demo
 RUN cd /root/rpki-mft-number-demo/ && perl Makefile.PL && make && make install
 COPY rsyncd.conf /etc/
 RUN sed -i 's/RSYNC_ENABLE=false/RSYNC_ENABLE=true/' /etc/default/rsync
+
 RUN rm -rf /root/rpki-mft-number-demo/

@@ -22,6 +22,8 @@ numbers and related transitions.  See
     Validators:
       - fort (1.5.3, 1.5.4, 1.6.1)
       - octorpki (1.4.3, 1.4.4, 1.5.10)
+      - ripe-validator (2.24)
+      - ripe-validator-3 (3.2-2021.04.07.12.55)
       - routinator (0.11.0, 0.12.0, 0.13.2)
       - rpki-client (7.0, 8.7, 9.0)
 
@@ -64,7 +66,7 @@ so:
 ### Current results
 
 See [current-results.txt](current-results.txt) for the output from
-running all tests for all configured validators.
+running all tests for all current validators.
 
 #### Summary of current results
 

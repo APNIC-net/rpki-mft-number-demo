@@ -85,6 +85,67 @@ if ($validator eq 'routinator') {
                "-tal.root=tals/tal.tal ".
                "-mode=oneoff ".
                "-output.sign=false");
+} elsif ($validator eq 'ripe-validator') {
+    mkdir "cache";
+    system("touch ripe-validator");
+    my $exec = "/rpki-validator-rpki-validator-$version/rpki-validator-cli/target/rpki-validator-cli-$version-jar-with-dependencies.jar";
+    if (not -e $exec) {
+        die "Validator version number is invalid.";
+    }
+    write_file("run-validator-link",
+               "#!/bin/bash\n".
+               "java -jar $exec -t tals/tal.tal --output-dir ./cache >myout 2>&1;\n".
+               "cat myout | grep -v 'PASSED' | grep -v 'is VALID';\n");
+} elsif ($validator eq 'ripe-validator-3') {
+    mkdir "cache";
+    mkdir "rsync";
+    my $port =
+        ($$ + int(rand(1024))) % (65535 - 1024) + 1024;
+
+    my @config = read_file("/rpki-validator-3-3.2-2021.04.07.12.55/rpki-validator/target/deb-conf/application.properties");
+    my @new_config;
+    for my $line (@config) {
+        if ($line =~ /^#/) {
+            next;
+        }
+        if ($line =~ /^\s*$/) {
+            next;
+        }
+        chomp $line;
+        my ($attr, $value) = ($line =~ /^(.*?)=(.*)$/);
+        if ($attr eq 'server.port') {
+            push @new_config, "$attr=$port";
+        } elsif ($attr eq 'rpki.validator.data.path') {
+            push @new_config, "$attr=$state_dir/cache";
+        } elsif ($attr eq 'rpki.validator.preconfigured.trust.anchors.directory') {
+            push @new_config, "$attr=$state_dir/tals";
+        } elsif ($attr eq 'rpki.validator.rsync.local.storage.directory') {
+            push @new_config, "$attr=$state_dir/rsync";
+        } elsif ($attr eq 'management.endpoint.prometheus.enabled') {
+            push @new_config, "$attr=false";
+        } else {
+            push @new_config, $line;
+        }
+    }
+    for (@new_config) {
+        $_ .= "\n";
+    }
+    write_file("$state_dir/deb.properties", @new_config);
+    my $exec = "/rpki-validator-3-$version/rpki-validator/target/rpki-validator-3.2-SNAPSHOT.jar";
+    if (not -e $exec) {
+        die "Validator version number is invalid.";
+    }
+    system("chmod 755 /root/.sdkman/bin/sdkman-init.sh");
+
+    write_file("run-validator-link",
+               "#!/bin/bash\n".
+               "timeout 15 ".
+               "java -Dspring.config.location=classpath:/application.properties,file:./deb.properties ".
+               "-jar $exec >myout 2>&1;\n".
+               "cat myout ".
+               "| grep -e 'Tree validation succeeded' ".
+                      "-e 'Validation result' ".
+                      "-e 'Starting tree validation';\n");
 } else {
     die "Invalid validator name '$validator'";
 }
