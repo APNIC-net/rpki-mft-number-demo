@@ -14,11 +14,18 @@ my %validators = (
     'ripe-validator-3' => [qw(3.2-2021.04.07.12.55)],
 );
 
+my $max_159        = "730750818665451459101842416358141509827966271487";
+my $max_159_plus_1 = "730750818665451459101842416358141509827966271488";
+my $max_160        = "1461501637330902918203684832716283019655932542975";
+my $max_160_plus_1 = "1461501637330902918203684832716283019655932542976";
+
 my %test_name_to_fn = (
-    'manifest-number-reuse'         => \&manifest_number_reuse,
-    'manifest-number-regression'    => \&manifest_number_regression,
-    'manifest-number-largest-value' => \&manifest_number_largest_value,
-    'manifest-number-too-large'     => \&manifest_number_too_large,
+    'manifest-number-reuse'             => \&manifest_number_reuse,
+    'manifest-number-regression'        => \&manifest_number_regression,
+    'manifest-number-largest-value-159' => \&manifest_number_largest_value_159,
+    'manifest-number-too-large-159'     => \&manifest_number_too_large_159,
+    'manifest-number-largest-value-160' => \&manifest_number_largest_value_160,
+    'manifest-number-too-large-160'     => \&manifest_number_too_large_160,
 );
 
 sub make_random_string
@@ -82,11 +89,11 @@ sub manifest_number_regression
     print "---\n";
 }
 
-sub manifest_number_largest_value
+sub manifest_number_largest_value_159
 {
     my ($validator_name, $validator_version) = @_;
 
-    print "manifest-number-largest-value ($validator_name v$validator_version)\n";
+    print "manifest-number-largest-value-159 ($validator_name v$validator_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 1234");
@@ -99,18 +106,18 @@ sub manifest_number_largest_value
     print "End validator run\n";
     sleep(1);
 
-    system("reissue-crl-and-mft --name $ta_name --mft-number 1461501637330902918203684832716283019655932542975");
+    system("reissue-crl-and-mft --name $ta_name --mft-number $max_159");
     print "Validator run (largest possible manifest number value):\n";
     system("run-validator $vp");
     print "End validator run\n";
     print "---\n";
 }
 
-sub manifest_number_too_large
+sub manifest_number_too_large_159
 {
     my ($validator_name, $validator_version) = @_;
 
-    print "manifest-number-too-large ($validator_name v$validator_version)\n";
+    print "manifest-number-too-large-160 ($validator_name v$validator_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 1234");
@@ -123,7 +130,55 @@ sub manifest_number_too_large
     print "End validator run\n";
     sleep(1);
 
-    system("reissue-crl-and-mft --name $ta_name --mft-number 1461501637330902918203684832716283019655932542976");
+    system("reissue-crl-and-mft --name $ta_name --mft-number $max_159_plus_1");
+    print "Validator run (manifest number value is too large):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
+sub manifest_number_largest_value_160
+{
+    my ($validator_name, $validator_version) = @_;
+
+    print "manifest-number-largest-value-160 ($validator_name v$validator_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --mft-number $max_160");
+    print "Validator run (largest possible manifest number value):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
+sub manifest_number_too_large_160
+{
+    my ($validator_name, $validator_version) = @_;
+
+    print "manifest-number-too-large-160 ($validator_name v$validator_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --mft-number $max_160_plus_1");
     print "Validator run (manifest number value is too large):\n";
     system("run-validator $vp");
     print "End validator run\n";
@@ -136,8 +191,10 @@ if (not @ARGV) {
     print "Test names:\n";
     print "  - manifest-number-reuse\n";
     print "  - manifest-number-regression\n";
-    print "  - manifest-number-largest-value\n";
-    print "  - manifest-number-too-large\n";
+    print "  - manifest-number-largest-value-159\n";
+    print "  - manifest-number-too-large-159\n";
+    print "  - manifest-number-largest-value-160\n";
+    print "  - manifest-number-too-large-160\n";
     print "Validators:\n";
     for my $name (sort keys %validators) {
         my @versions = @{$validators{$name}};
@@ -158,8 +215,10 @@ if ($test_name eq 'all') {
     @test_fns = @test_name_to_fn{qw(
         manifest-number-reuse
         manifest-number-regression
-        manifest-number-largest-value
-        manifest-number-too-large
+        manifest-number-largest-value-159
+        manifest-number-too-large-159
+        manifest-number-largest-value-160
+        manifest-number-too-large-160
     )};
 } else {
     my $test_fn = $test_name_to_fn{$test_name};

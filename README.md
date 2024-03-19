@@ -17,8 +17,10 @@ numbers and related transitions.  See
     Test names:
       - manifest-number-reuse
       - manifest-number-regression
-      - manifest-number-largest-value
-      - manifest-number-too-large
+      - manifest-number-largest-value-159
+      - manifest-number-too-large-159
+      - manifest-number-largest-value-160
+      - manifest-number-too-large-160
     Validators:
       - fort (1.5.3, 1.5.4, 1.6.1)
       - octorpki (1.4.3, 1.4.4, 1.5.10)
@@ -30,8 +32,8 @@ numbers and related transitions.  See
     The string 'all' can also be used for each option,
     to test multiple versions of a validator, or multiple
     validators, or multiple tests.
-    # run-test manifest-number-decrease rpki-client 9.0
-    manifest-number-decrease (rpki-client v9.0)
+    # run-test manifest-number-regression rpki-client 9.0
+    manifest-number-regression (rpki-client v9.0)
     writing RSA key
     TAL path: /data/repo/56DC0E8346EE557E329FA89D6D34D01FA403F16D.tal
     TAL path written to /last-tal-path
@@ -66,7 +68,7 @@ so:
 ### Current results
 
 See [current-results.txt](current-results.txt) for the output from
-running all tests for all current validators.
+running all tests for all current validators plus OctoRPKI.
 
 #### Summary of current results
 
@@ -74,18 +76,26 @@ running all tests for all current validators.
     - FORT, OctoRPKI, Routinator, and rpki-client < 8.7 do not appear
       to check for these problems.
     - rpki-client >= 8.7 reports errors for these problems.
- - manifest-number-largest-value
-    - FORT and Routinator report generic errors on attempting to
-      validate a manifest with the largest possible value.
-    - OctoRPKI appears to process the repository successfully.
-    - rpki-client appears to process the repository successfully.
- - manifest-number-too-large
-    - FORT and Routinator report generic errors on attempting to
-      validate a manifest with a value that is too large.
-    - OctoRPKI does not appear to check for this problem (validates
-      the repository successfully).
+ - manifest-number-largest-value-159
+ - manifest-number-too-large-159
+    - Routinator limits the manifest number to the largest signed
+      160-bit value.
+    - FORT reports generic errors on attempting to validate a manifest
+      with either of these values.
+    - OctoRPKI and rpki-client appear to process the repository
+      successfully.
+ - manifest-number-largest-value-160
+ - manifest-number-too-large-160
+    - Since Routinator limits the manifest number to the largest
+      signed 160-bit value, it reports errors for these tests (which
+      use the largest unsigned 160-bit value).
+    - As with the 159 tests, FORT reports generic errors for both of
+      these tests.
+    - OctoRPKI appears to process the repository successfully (i.e. it
+      does not check for a manifest number that is too large).
     - rpki-client reports specific errors on attempting to validate a
-      manifest with a value that is too large.
+      manifest with a value that exceeds the largest unsigned 160-bit
+      value.
 
 ### Todo
 
