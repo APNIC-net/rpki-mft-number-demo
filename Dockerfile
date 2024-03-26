@@ -126,6 +126,12 @@ RUN mkdir /opt/routinator-0.12.0
 RUN cargo install --locked --force routinator --root /opt/routinator-0.12.0 --version 0.12.0
 RUN mkdir /opt/routinator-0.11.0
 RUN cargo install --locked --force routinator --root /opt/routinator-0.11.0 --version 0.11.0
+RUN mkdir /opt/routinator-main
+RUN mkdir /opt/routinator-main-build
+RUN cd /opt/routinator-main-build \
+    && git clone https://github.com/NLnetLabs/routinator \
+    && cd routinator \
+    && cargo install --path . --root /opt/routinator-main
 
 RUN mkdir -p /opt/octorpki-1.5.10/bin
 RUN wget https://github.com/cloudflare/cfrpki/releases/download/v1.5.10/octorpki-v1.5.10-linux-x86_64 -O /opt/octorpki-1.5.10/bin/octorpki

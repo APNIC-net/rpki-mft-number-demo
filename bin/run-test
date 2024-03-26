@@ -6,7 +6,7 @@ use strict;
 use autodie qw(:all);
 
 my %validators = (
-    routinator         => [qw(0.11.0 0.12.0 0.13.2)],
+    routinator         => [qw(0.11.0 0.12.0 0.13.2 main)],
     fort               => [qw(1.5.3 1.5.4 1.6.1)],
     'rpki-client'      => [qw(7.0 8.7 9.0)],
     octorpki           => [qw(1.4.3 1.4.4 1.5.10)],
@@ -35,11 +35,24 @@ sub make_random_string
     return join '', map { $chars[int(rand(@chars))] } (1..8);
 }
 
+sub get_display_version
+{
+    my ($validator_version) = @_;
+
+    my $display_version =
+        ($validator_version =~ /\d/)
+            ? "v$validator_version"
+            : $validator_version;
+
+    return $display_version;
+}
+
 sub manifest_number_reuse
 {
     my ($validator_name, $validator_version) = @_;
 
-    print "manifest-number-reuse ($validator_name v$validator_version)\n";
+    my $display_version = get_display_version($validator_version);
+    print "manifest-number-reuse ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 1234");
@@ -63,7 +76,8 @@ sub manifest_number_regression
 {
     my ($validator_name, $validator_version) = @_;
 
-    print "manifest-number-regression ($validator_name v$validator_version)\n";
+    my $display_version = get_display_version($validator_version);
+    print "manifest-number-regression ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 1234");
@@ -93,7 +107,8 @@ sub manifest_number_largest_value_159
 {
     my ($validator_name, $validator_version) = @_;
 
-    print "manifest-number-largest-value-159 ($validator_name v$validator_version)\n";
+    my $display_version = get_display_version($validator_version);
+    print "manifest-number-largest-value-159 ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 1234");
@@ -117,7 +132,8 @@ sub manifest_number_too_large_159
 {
     my ($validator_name, $validator_version) = @_;
 
-    print "manifest-number-too-large-160 ($validator_name v$validator_version)\n";
+    my $display_version = get_display_version($validator_version);
+    print "manifest-number-too-large-160 ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 1234");
@@ -141,7 +157,8 @@ sub manifest_number_largest_value_160
 {
     my ($validator_name, $validator_version) = @_;
 
-    print "manifest-number-largest-value-160 ($validator_name v$validator_version)\n";
+    my $display_version = get_display_version($validator_version);
+    print "manifest-number-largest-value-160 ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 1234");
@@ -165,7 +182,8 @@ sub manifest_number_too_large_160
 {
     my ($validator_name, $validator_version) = @_;
 
-    print "manifest-number-too-large-160 ($validator_name v$validator_version)\n";
+    my $display_version = get_display_version($validator_version);
+    print "manifest-number-too-large-160 ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 1234");

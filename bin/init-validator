@@ -20,8 +20,13 @@ my ($real_tal_path) = read_file($tal_path);
 system("cp $real_tal_path tals/tal.tal");
 
 if ($validator eq 'routinator') {
-    my @vord = split /\./, $version;
-    my $le_11 = ($vord[0] == 0 and $vord[1] <= 11);
+    my $le_11;
+    if ($version eq 'main') {
+        $le_11 = 0;
+    } else {
+        my @vord = split /\./, $version;
+        $le_11 = ($vord[0] == 0 and $vord[1] <= 11);
+    }
 
     mkdir "cache";
     my $exec = "/opt/routinator-$version/bin/routinator";

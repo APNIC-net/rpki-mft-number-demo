@@ -26,7 +26,7 @@ numbers and related transitions.  See
       - octorpki (1.4.3, 1.4.4, 1.5.10)
       - ripe-validator (2.24)
       - ripe-validator-3 (3.2-2021.04.07.12.55)
-      - routinator (0.11.0, 0.12.0, 0.13.2)
+      - routinator (0.11.0, 0.12.0, 0.13.2, main)
       - rpki-client (7.0, 8.7, 9.0)
 
     The string 'all' can also be used for each option,
@@ -73,9 +73,10 @@ running all tests for all current validators plus OctoRPKI.
 #### Summary of current results
 
  - manifest-number-reuse, manifest-number-regression
-    - FORT, OctoRPKI, Routinator, and rpki-client < 8.7 do not appear
-      to check for these problems.
-    - rpki-client >= 8.7 reports errors for these problems.
+    - FORT, OctoRPKI, Routinator < r385e74d, and rpki-client < 8.7 do
+      not appear to check for these problems.
+    - Routinator >= r385e74d and rpki-client >= 8.7 report errors for
+      these problems.
  - manifest-number-largest-value-159
  - manifest-number-too-large-159
     - Routinator limits the manifest number to the largest signed
