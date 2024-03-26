@@ -1,7 +1,7 @@
 ## rpki-mft-number-demo
 
 For demonstrating how RPKI validators handle specific manifest
-numbers and related transitions.  See
+numbers (and other fields) and related transitions.  See
 [draft-harrison-sidrops-manifest-numbers](https://datatracker.ietf.org/doc/draft-harrison-sidrops-manifest-numbers/).
 
 ### Build
@@ -23,6 +23,10 @@ numbers and related transitions.  See
       - manifest-number-too-large-159
       - manifest-number-largest-value-160
       - manifest-number-too-large-160
+      - manifest-thisupdate-reuse
+      - manifest-thisupdate-reuse-new-fn
+      - manifest-thisupdate-regression
+      - manifest-thisupdate-regression-new-fn
     Validators:
       - fort (1.5.3, 1.5.4, 1.6.1)
       - octorpki (1.4.3, 1.4.4, 1.5.10)
@@ -76,15 +80,14 @@ running all tests for all current validators plus OctoRPKI.
 
  - manifest-number-reuse
  - manifest-number-regression
-    - FORT, OctoRPKI, Routinator < r385e74d, and rpki-client < 8.7 do
-      not appear to check for these problems.
     - Routinator >= r385e74d and rpki-client >= 8.7 report errors for
-      these problems.
+      these problems, while the other validators do not.
  - manifest-number-reuse-new-fn
  - manifest-number-regression-new-fn
     - Routinator >= r385e74d and rpki-client >= 8.7 reset (in effect)
       the locally-stored manifest number for the CA when the manifest
       filename changes.
+    - FORT reports errors on changing the filename.
  - manifest-number-largest-value-159
  - manifest-number-too-large-159
     - Routinator limits the manifest number to the largest signed
@@ -105,6 +108,15 @@ running all tests for all current validators plus OctoRPKI.
     - rpki-client reports specific errors on attempting to validate a
       manifest with a value that exceeds the largest unsigned 160-bit
       value.
+ - manifest-thisupdate-reuse
+ - manifest-thisupdate-regression
+    - rpki-client >= 9.0 reports errors for these problems, while the
+      other validators do not.
+ - manifest-thisupdate-reuse-new-fn
+ - manifest-thisupdate-regression-new-fn
+    - rpki-client >= 9.0 reset (in effect) the locally-stored
+      this-update value for the CA when the manifest filename changes.
+    - FORT reports errors on changing the filename.
 
 ### Todo
 

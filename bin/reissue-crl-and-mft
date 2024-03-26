@@ -16,6 +16,7 @@ Usage:
 $0 --name {ca-name}
    [--mft-number {mft-number}]
    [--mft-filename {mft-filename}]
+   [--this-update {%FT%T}]
 
 Reissue the CRL and manifest for the given CA.
 EOF
@@ -27,17 +28,18 @@ my %options;
 GetOptions(\%options,
            'name=s',
            'mft-number=s',
-           'mft-filename=s');
+           'mft-filename=s',
+           'this-update=s');
 if (not $options{'name'}) {
     print "Please enter a name.\n";
     usage();
 }
 
-my ($name, $mft_number, $mft_filename) =
-    @options{qw(name mft-number mft-filename)};
+my ($name, $mft_number, $mft_filename, $this_update_arg) =
+    @options{qw(name mft-number mft-filename this-update)};
 
 my $path = "/data/cas/$name";
 my $ca = APNIC::RPKI::CA->new(ca_path => $path);
-$ca->publish($mft_number, $mft_filename);
+$ca->publish($mft_number, $mft_filename, $this_update_arg);
 
 1;

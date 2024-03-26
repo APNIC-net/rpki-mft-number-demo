@@ -4,6 +4,7 @@ use warnings;
 use strict;
 
 use autodie qw(:all);
+use DateTime;
 
 my %validators = (
     routinator         => [qw(0.11.0 0.12.0 0.13.2 main)],
@@ -20,14 +21,18 @@ my $max_160        = "1461501637330902918203684832716283019655932542975";
 my $max_160_plus_1 = "1461501637330902918203684832716283019655932542976";
 
 my %test_name_to_fn = (
-    'manifest-number-reuse'             => \&manifest_number_reuse,
-    'manifest-number-reuse-new-fn'      => \&manifest_number_reuse_new_fn,
-    'manifest-number-regression'        => \&manifest_number_regression,
-    'manifest-number-regression-new-fn' => \&manifest_number_regression_new_fn,
-    'manifest-number-largest-value-159' => \&manifest_number_largest_value_159,
-    'manifest-number-too-large-159'     => \&manifest_number_too_large_159,
-    'manifest-number-largest-value-160' => \&manifest_number_largest_value_160,
-    'manifest-number-too-large-160'     => \&manifest_number_too_large_160,
+    'manifest-number-reuse'                 => \&manifest_number_reuse,
+    'manifest-number-reuse-new-fn'          => \&manifest_number_reuse_new_fn,
+    'manifest-number-regression'            => \&manifest_number_regression,
+    'manifest-number-regression-new-fn'     => \&manifest_number_regression_new_fn,
+    'manifest-number-largest-value-159'     => \&manifest_number_largest_value_159,
+    'manifest-number-too-large-159'         => \&manifest_number_too_large_159,
+    'manifest-number-largest-value-160'     => \&manifest_number_largest_value_160,
+    'manifest-number-too-large-160'         => \&manifest_number_too_large_160,
+    'manifest-thisupdate-reuse'             => \&manifest_thisupdate_reuse,
+    'manifest-thisupdate-reuse-new-fn'      => \&manifest_thisupdate_reuse_new_fn,
+    'manifest-thisupdate-regression'        => \&manifest_thisupdate_regression,
+    'manifest-thisupdate-regression-new-fn' => \&manifest_thisupdate_regression_new_fn,
 );
 
 sub make_random_string
@@ -47,6 +52,144 @@ sub get_display_version
             : $validator_version;
 
     return $display_version;
+}
+
+sub manifest_thisupdate_reuse
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "manifest-thisupdate-reuse ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    my $dt = DateTime->now(time_zone => 'UTC');
+    my $dt_str = $dt->strftime('%FT%T');
+
+    system("reissue-crl-and-mft --name $ta_name --this-update $dt_str");
+    print "Validator run (specific this-update):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --this-update $dt_str");
+    print "Validator run (specific this-update reused):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
+sub manifest_thisupdate_reuse_new_fn
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "manifest-thisupdate-reuse-new-fn ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    my $dt = DateTime->now(time_zone => 'UTC');
+    my $dt_str = $dt->strftime('%FT%T');
+
+    system("reissue-crl-and-mft --name $ta_name --this-update $dt_str");
+    print "Validator run (specific this-update):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --this-update $dt_str");
+    print "Validator run (specific this-update reused):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --this-update $dt_str ".
+           "--mft-filename new.mft");
+    print "Validator run (specific this-update reused, new filename):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
+sub manifest_thisupdate_regression
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "manifest-thisupdate-regression ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    my $dt = DateTime->now(time_zone => 'UTC')->subtract(minutes => 1);
+    my $dt_str = $dt->strftime('%FT%T');
+
+    system("reissue-crl-and-mft --name $ta_name --this-update $dt_str");
+    print "Validator run (this-update regression):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
+sub manifest_thisupdate_regression_new_fn
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "manifest-thisupdate-regression-new-fn ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    my $dt = DateTime->now(time_zone => 'UTC')->subtract(minutes => 1);
+    my $dt_str = $dt->strftime('%FT%T');
+
+    system("reissue-crl-and-mft --name $ta_name --this-update $dt_str");
+    print "Validator run (this-update regression):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --this-update $dt_str ".
+           "--mft-filename new.mft");
+    print "Validator run (this-update regression, new filename):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
 }
 
 sub manifest_number_reuse
@@ -311,6 +454,10 @@ if ($test_name eq 'all') {
         manifest-number-too-large-159
         manifest-number-largest-value-160
         manifest-number-too-large-160
+        manifest-thisupdate-reuse
+        manifest-thisupdate-reuse-new-fn
+        manifest-thisupdate-regression
+        manifest-thisupdate-regression-new-fn
     )};
 } else {
     my $test_fn = $test_name_to_fn{$test_name};

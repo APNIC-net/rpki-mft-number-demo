@@ -169,6 +169,8 @@ RUN tar xf rpki-validator-2.24.tar.gz \
     && sdk use maven 3.9.6 \
     && mvn install -Dmaven.test.skip=true
 
+RUN apt-get install -y libdatetime-format-strptime-perl
+
 RUN echo 'source /root/.sdkman/bin/sdkman-init.sh' >> root/.bashrc
 COPY . /root/rpki-mft-number-demo
 RUN cd /root/rpki-mft-number-demo/ && perl Makefile.PL && make && make install

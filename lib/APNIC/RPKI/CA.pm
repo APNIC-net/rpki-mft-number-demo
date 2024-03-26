@@ -4,6 +4,7 @@ use warnings;
 use strict;
 
 use DateTime;
+use DateTime::Format::Strptime;
 use File::Slurp qw(read_file
                    write_file);
 use File::Temp qw(tempdir);
@@ -119,6 +120,12 @@ use constant ID_SIA_SIGNEDOBJECT => '1.3.6.1.5.5.7.48.11';
 our $DEBUG = 0;
 
 our $VERSION = '0.1';
+
+my $strp =
+    DateTime::Format::Strptime->new(
+        pattern   => '%FT%T',
+        time_zone => 'UTC'
+    );
 
 sub new
 {
@@ -588,7 +595,7 @@ sub get_ee
 
 sub issue_manifest
 {
-    my ($self, $mft_number, $mft_filename) = @_;
+    my ($self, $mft_number, $mft_filename, $this_update_arg) = @_;
 
     my $own_config = YAML::LoadFile('config.yml');
     my $sia = $own_config->{'mft_sia'};
@@ -608,8 +615,16 @@ sub issue_manifest
         $own_config->{'manifest_number'}++;
     }
     my $manifest_number = $own_config->{'manifest_number'};
-    my $this_update = DateTime->now(time_zone => 'UTC');
-    my $next_update = DateTime->now(time_zone => 'UTC')->add(days => 2);
+    my $this_update;
+    if ($this_update_arg) {
+        $this_update = $strp->parse_datetime($this_update_arg);
+        if (not $this_update) {
+            die "'$this_update_arg' is not a valid datetime string";
+        }
+    } else {
+        $this_update = DateTime->now(time_zone => 'UTC');
+    }
+    my $next_update = $this_update->clone()->add(days => 2);
     my $stg_repo = $own_config->{'stg_repo'};
     my @files = `ls $stg_repo`;
     chomp for @files;
@@ -653,7 +668,8 @@ sub publish_file
 
 sub publish
 {
-    my ($self, $mft_number, $mft_filename) = @_;
+    my ($self, $mft_number, $mft_filename,
+        $this_update_arg) = @_;
 
     $self->_chdir_ca();
     my $own_config = YAML::LoadFile('config.yml');
@@ -664,7 +680,8 @@ sub publish
     }
 
     $self->issue_crl();
-    $self->issue_manifest($mft_number, $mft_filename);
+    $self->issue_manifest($mft_number, $mft_filename,
+                          $this_update_arg);
 
     my $aia = $own_config->{'aia'};
     my $gski = $own_config->{'gski'};
