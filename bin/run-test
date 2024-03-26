@@ -21,7 +21,9 @@ my $max_160_plus_1 = "1461501637330902918203684832716283019655932542976";
 
 my %test_name_to_fn = (
     'manifest-number-reuse'             => \&manifest_number_reuse,
+    'manifest-number-reuse-new-fn'      => \&manifest_number_reuse_new_fn,
     'manifest-number-regression'        => \&manifest_number_regression,
+    'manifest-number-regression-new-fn' => \&manifest_number_regression_new_fn,
     'manifest-number-largest-value-159' => \&manifest_number_largest_value_159,
     'manifest-number-too-large-159'     => \&manifest_number_too_large_159,
     'manifest-number-largest-value-160' => \&manifest_number_largest_value_160,
@@ -72,6 +74,38 @@ sub manifest_number_reuse
     print "---\n";
 }
 
+sub manifest_number_reuse_new_fn
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "manifest-number-reuse-new-fn ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --mft-number 1");
+    print "Validator run (reused manifest number 1):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --mft-number 1 ".
+           "--mft-filename new.mft");
+    print "Validator run (reused manifest number 1, new filename):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
 sub manifest_number_regression
 {
     my ($validator_name, $validator_version) = @_;
@@ -98,6 +132,44 @@ sub manifest_number_regression
 
     system("reissue-crl-and-mft --name $ta_name --mft-number 2");
     print "Validator run (manifest number 2):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
+sub manifest_number_regression_new_fn
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "manifest-number-regression-new-fn ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --mft-number 3");
+    print "Validator run (manifest number 3):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --mft-number 2");
+    print "Validator run (manifest number 2):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --mft-number 2 ".
+           "--mft-filename new.mft");
+    print "Validator run (manifest number 2, new filename):\n";
     system("run-validator $vp");
     print "End validator run\n";
     print "---\n";
@@ -133,7 +205,7 @@ sub manifest_number_too_large_159
     my ($validator_name, $validator_version) = @_;
 
     my $display_version = get_display_version($validator_version);
-    print "manifest-number-too-large-160 ($validator_name $display_version)\n";
+    print "manifest-number-too-large-159 ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 1234");
@@ -232,7 +304,9 @@ my @test_fns;
 if ($test_name eq 'all') {
     @test_fns = @test_name_to_fn{qw(
         manifest-number-reuse
+        manifest-number-reuse-new-fn
         manifest-number-regression
+        manifest-number-regression-new-fn
         manifest-number-largest-value-159
         manifest-number-too-large-159
         manifest-number-largest-value-160

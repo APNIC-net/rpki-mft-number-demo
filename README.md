@@ -16,7 +16,9 @@ numbers and related transitions.  See
 
     Test names:
       - manifest-number-reuse
+      - manifest-number-reuse-new-fn
       - manifest-number-regression
+      - manifest-number-regression-new-fn
       - manifest-number-largest-value-159
       - manifest-number-too-large-159
       - manifest-number-largest-value-160
@@ -72,11 +74,17 @@ running all tests for all current validators plus OctoRPKI.
 
 #### Summary of current results
 
- - manifest-number-reuse, manifest-number-regression
+ - manifest-number-reuse
+ - manifest-number-regression
     - FORT, OctoRPKI, Routinator < r385e74d, and rpki-client < 8.7 do
       not appear to check for these problems.
     - Routinator >= r385e74d and rpki-client >= 8.7 report errors for
       these problems.
+ - manifest-number-reuse-new-fn
+ - manifest-number-regression-new-fn
+    - Routinator >= r385e74d and rpki-client >= 8.7 reset (in effect)
+      the locally-stored manifest number for the CA when the manifest
+      filename changes.
  - manifest-number-largest-value-159
  - manifest-number-too-large-159
     - Routinator limits the manifest number to the largest signed

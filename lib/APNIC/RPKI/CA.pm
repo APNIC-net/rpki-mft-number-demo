@@ -588,14 +588,19 @@ sub get_ee
 
 sub issue_manifest
 {
-    my ($self, $mft_number) = @_;
+    my ($self, $mft_number, $mft_filename) = @_;
 
     my $own_config = YAML::LoadFile('config.yml');
     my $sia = $own_config->{'mft_sia'};
     $sia =~ s/\.10;/.11;/;
     $self->issue_new_ee_certificate(undef, undef, $sia);
     my $aia = $own_config->{'aia'};
-    my $gski = $own_config->{'gski'};
+    if ($mft_filename) {
+        $own_config->{'mft_filename'} = $mft_filename;
+    }
+    my $new_mft_filename =
+        $own_config->{'mft_filename'}
+            || $own_config->{'gski'}.'.mft';
 
     if (defined $mft_number) {
         $own_config->{'manifest_number'} = $mft_number;
@@ -629,7 +634,8 @@ sub issue_manifest
     $mft->files(\@mft_files);
 
     my $mft_proper = $self->sign_cms($mft->encode(), ID_CT_MFT());
-    write_file("$stg_repo/$gski.mft", $mft_proper);
+    write_file("$stg_repo/$new_mft_filename", $mft_proper);
+    YAML::DumpFile('config.yml', $own_config);
 
     return 1;
 }
@@ -647,18 +653,24 @@ sub publish_file
 
 sub publish
 {
-    my ($self, $mft_number) = @_;
+    my ($self, $mft_number, $mft_filename) = @_;
+
+    $self->_chdir_ca();
+    my $own_config = YAML::LoadFile('config.yml');
+    my $stg_repo = $own_config->{'stg_repo'};
+    my $res = system("rm -f $stg_repo/*");
+    if ($res != 0) {
+        die "Unable to clear current staging repository state";
+    }
 
     $self->issue_crl();
-    $self->issue_manifest($mft_number);
+    $self->issue_manifest($mft_number, $mft_filename);
 
-    my $own_config = YAML::LoadFile('config.yml');
     my $aia = $own_config->{'aia'};
     my $gski = $own_config->{'gski'};
-    my $stg_repo = $own_config->{'stg_repo'};
     my $repo = $own_config->{'repo'};
 
-    my $res = system("rm -f $repo/*");
+    $res = system("rm -f $repo/*");
     if ($res != 0) {
         die "Unable to clear current repository state";
     }

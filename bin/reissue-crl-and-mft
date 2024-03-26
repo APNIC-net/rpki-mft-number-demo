@@ -13,7 +13,9 @@ sub usage
 {
     print <<EOF;
 Usage:
-$0 --name {ca-name} [--mft-number {mft-number}]
+$0 --name {ca-name}
+   [--mft-number {mft-number}]
+   [--mft-filename {mft-filename}]
 
 Reissue the CRL and manifest for the given CA.
 EOF
@@ -22,17 +24,20 @@ EOF
 }
 
 my %options;
-GetOptions(\%options, 'name=s', 'mft-number=s');
+GetOptions(\%options,
+           'name=s',
+           'mft-number=s',
+           'mft-filename=s');
 if (not $options{'name'}) {
     print "Please enter a name.\n";
     usage();
 }
 
-my ($name, $mft_number) =
-    @options{qw(name mft-number)};
+my ($name, $mft_number, $mft_filename) =
+    @options{qw(name mft-number mft-filename)};
 
 my $path = "/data/cas/$name";
 my $ca = APNIC::RPKI::CA->new(ca_path => $path);
-$ca->publish($mft_number);
+$ca->publish($mft_number, $mft_filename);
 
 1;
