@@ -71,7 +71,7 @@ name_opt                = ca_default
 cert_opt                = ca_default
 copy_extensions         = none
 x509_extensions         = signing_ca_ext
-default_crl_days        = 365
+default_crl_days        = 1
 crl_extensions          = crl_ext
 
 [ match_pol ]
@@ -582,12 +582,24 @@ sub issue_crl
     } else {
         $crl_last_update = DateTime->now(time_zone => 'UTC');
     }
+    
+    my $crl_next_update;
+    if ($crl_next_update_arg) {
+        $crl_next_update = $strp->parse_datetime($crl_next_update_arg);
+        if (not $crl_next_update) {
+            die "'$crl_next_update_arg' is not a valid datetime string";
+        }
+    } else {
+        $crl_next_update = $crl_last_update->clone()->add(days => 1);
+    }
 
     my $openssl = $self->{'openssl'}->get_openssl_path();
-    my $crl_last_update_str = $crl_last_update->strftime('%F %T');
-    _system("faketime '$crl_last_update_str' ".
-            "$openssl ca -batch -crlexts crl_ext -config ca.cnf -gencrl ".
-            "-out ".CRL_FILENAME());
+    my $crl_last_update_str = $crl_last_update->strftime('%Y%m%d%H%M%SZ');
+    my $crl_next_update_str = $crl_next_update->strftime('%Y%m%d%H%M%SZ');
+    _system("$openssl ca -batch -crlexts crl_ext -config ca.cnf -gencrl ".
+            "-out ".CRL_FILENAME().
+            " -crl_lastupdate $crl_last_update_str ".
+            " -crl_nextupdate $crl_next_update_str");
     _system("$openssl crl -in ".CRL_FILENAME()." -outform DER -out ".
             "crl.der.crl");
 
@@ -628,7 +640,8 @@ sub get_ee
 
 sub issue_manifest
 {
-    my ($self, $mft_number, $mft_filename, $this_update_arg) = @_;
+    my ($self, $mft_number, $mft_filename,
+        $this_update_arg, $next_update_arg) = @_;
 
     my $own_config = YAML::LoadFile('config.yml');
     my $sia = $own_config->{'mft_sia'};
@@ -648,6 +661,7 @@ sub issue_manifest
         $own_config->{'manifest_number'}++;
     }
     my $manifest_number = $own_config->{'manifest_number'};
+
     my $this_update;
     if ($this_update_arg) {
         $this_update = $strp->parse_datetime($this_update_arg);
@@ -657,7 +671,16 @@ sub issue_manifest
     } else {
         $this_update = DateTime->now(time_zone => 'UTC');
     }
-    my $next_update = $this_update->clone()->add(days => 2);
+    my $next_update;
+    if ($next_update_arg) {
+        $next_update = $strp->parse_datetime($next_update_arg);
+        if (not $next_update) {
+            die "'$next_update_arg' is not a valid datetime string";
+        }
+    } else {
+        $next_update = $this_update->clone()->add(days => 1);
+    }
+
     my $stg_repo = $own_config->{'stg_repo'};
     my @files = `ls $stg_repo`;
     chomp for @files;

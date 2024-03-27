@@ -33,6 +33,7 @@ my %test_name_to_fn = (
     'manifest-thisupdate-reuse-new-fn'      => \&manifest_thisupdate_reuse_new_fn,
     'manifest-thisupdate-regression'        => \&manifest_thisupdate_regression,
     'manifest-thisupdate-regression-new-fn' => \&manifest_thisupdate_regression_new_fn,
+    'manifest-thisupdate-largest-value'     => \&manifest_thisupdate_largest_value,
     'crl-number-reuse'                      => \&crl_number_reuse,
     'crl-number-reuse-new-fn'               => \&crl_number_reuse_new_fn,
     'crl-number-regression'                 => \&crl_number_regression,
@@ -45,6 +46,7 @@ my %test_name_to_fn = (
     'crl-lastupdate-reuse-new-fn'           => \&crl_lastupdate_reuse_new_fn,
     'crl-lastupdate-regression'             => \&crl_lastupdate_regression,
     'crl-lastupdate-regression-new-fn'      => \&crl_lastupdate_regression_new_fn,
+    'crl-lastupdate-largest-value'          => \&crl_lastupdate_largest_value,
 );
 
 sub make_random_string
@@ -204,6 +206,57 @@ sub manifest_thisupdate_regression_new_fn
     print "---\n";
 }
 
+sub manifest_thisupdate_largest_value
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "manifest-thisupdate-largest-value ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    my $dt =
+        DateTime->new(
+            year      => 9999,
+            month     => 12,
+            day       => 31,
+            hour      => 23,
+            minute    => 59,
+            second    => 59,
+            time_zone => 'UTC'
+        );
+    my $dt_str = $dt->strftime('%FT%T');
+
+    system("reissue-crl-and-mft --name $ta_name ".
+           "--this-update $dt_str --next-update $dt_str");
+    print "Validator run (this-update largest value):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name ".
+           "--this-update $dt_str --next-update $dt_str");
+    print "Validator run (this-update largest value reused):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --mft-filename new.mft");
+    print "Validator run (this-update regression with new filename):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
 sub crl_lastupdate_reuse
 {
     my ($validator_name, $validator_version) = @_;
@@ -336,6 +389,57 @@ sub crl_lastupdate_regression_new_fn
 
     system("reissue-crl-and-mft --name $ta_name --crl-last-update $dt_str ".
            "--crl-filename new.mft");
+    print "Validator run (CRL last-update regression, new filename):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
+sub crl_lastupdate_largest_value
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "crl-lastupdate-largest-value ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    my $dt =
+        DateTime->new(
+            year      => 9999,
+            month     => 12,
+            day       => 31,
+            hour      => 23,
+            minute    => 59,
+            second    => 59,
+            time_zone => 'UTC'
+        );
+    my $dt_str = $dt->strftime('%FT%T');
+
+    system("reissue-crl-and-mft --name $ta_name ".
+           "--crl-last-update $dt_str --crl-next-update $dt_str");
+    print "Validator run (CRL last-update largest value):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name ".
+           "--crl-last-update $dt_str --crl-next-update $dt_str");
+    print "Validator run (CRL last-update largest value reused):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+    
+    system("reissue-crl-and-mft --name $ta_name --crl-filename new.crl");
     print "Validator run (CRL last-update regression, new filename):\n";
     system("run-validator $vp");
     print "End validator run\n";
@@ -811,6 +915,7 @@ if (not @ARGV) {
     print "  - manifest-thisupdate-reuse-new-fn\n";
     print "  - manifest-thisupdate-regression\n";
     print "  - manifest-thisupdate-regression-new-fn\n";
+    print "  - manifest-thisupdate-largest-value\n";
     print "  - crl-number-reuse\n";
     print "  - crl-number-reuse-new-fn\n";
     print "  - crl-number-regression\n";
@@ -822,7 +927,8 @@ if (not @ARGV) {
     print "  - crl-lastupdate-reuse\n";
     print "  - crl-lastupdate-reuse-new-fn\n";
     print "  - crl-lastupdate-regression\n";
-    print "  - crl-lastupdate-regression-new-fn\n\n";
+    print "  - crl-lastupdate-regression-new-fn\n";
+    print "  - crl-lastupdate-largest-value\n";
 
     print "Validators:\n";
     for my $name (sort keys %validators) {
@@ -854,6 +960,7 @@ if ($test_name eq 'all') {
         manifest-thisupdate-reuse-new-fn
         manifest-thisupdate-regression
         manifest-thisupdate-regression-new-fn
+        manifest-thisupdate-largest-value
         crl-number-reuse
         crl-number-reuse-new-fn
         crl-number-regression
@@ -866,6 +973,7 @@ if ($test_name eq 'all') {
         crl-lastupdate-reuse-new-fn
         crl-lastupdate-regression
         crl-lastupdate-regression-new-fn
+        crl-lastupdate-largest-value
     )};
 } else {
     my $test_fn = $test_name_to_fn{$test_name};
