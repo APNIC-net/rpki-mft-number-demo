@@ -170,6 +170,7 @@ RUN tar xf rpki-validator-2.24.tar.gz \
     && mvn install -Dmaven.test.skip=true
 
 RUN apt-get install -y libdatetime-format-strptime-perl
+RUN apt-get install -y faketime
 
 RUN echo 'source /root/.sdkman/bin/sdkman-init.sh' >> root/.bashrc
 COPY . /root/rpki-mft-number-demo

@@ -1,7 +1,7 @@
 ## rpki-mft-number-demo
 
-For demonstrating how RPKI validators handle specific manifest
-numbers (and other fields) and related transitions.  See
+For demonstrating how RPKI validators handle specific manifest numbers
+(and other manifest/CRL fields) and related transitions.  See
 [draft-harrison-sidrops-manifest-numbers](https://datatracker.ietf.org/doc/draft-harrison-sidrops-manifest-numbers/).
 
 ### Build
@@ -27,6 +27,18 @@ numbers (and other fields) and related transitions.  See
       - manifest-thisupdate-reuse-new-fn
       - manifest-thisupdate-regression
       - manifest-thisupdate-regression-new-fn
+      - crl-number-reuse
+      - crl-number-reuse-new-fn
+      - crl-number-regression
+      - crl-number-regression-new-fn
+      - crl-number-largest-value-159
+      - crl-number-too-large-159
+      - crl-number-largest-value-160
+      - crl-number-too-large-160
+      - crl-lastupdate-reuse
+      - crl-lastupdate-reuse-new-fn
+      - crl-lastupdate-regression
+      - crl-lastupdate-regression-new-fn
     Validators:
       - fort (1.5.3, 1.5.4, 1.6.1)
       - octorpki (1.4.3, 1.4.4, 1.5.10)

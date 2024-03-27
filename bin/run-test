@@ -33,6 +33,18 @@ my %test_name_to_fn = (
     'manifest-thisupdate-reuse-new-fn'      => \&manifest_thisupdate_reuse_new_fn,
     'manifest-thisupdate-regression'        => \&manifest_thisupdate_regression,
     'manifest-thisupdate-regression-new-fn' => \&manifest_thisupdate_regression_new_fn,
+    'crl-number-reuse'                      => \&crl_number_reuse,
+    'crl-number-reuse-new-fn'               => \&crl_number_reuse_new_fn,
+    'crl-number-regression'                 => \&crl_number_regression,
+    'crl-number-regression-new-fn'          => \&crl_number_regression_new_fn,
+    'crl-number-largest-value-159'          => \&crl_number_largest_value_159,
+    'crl-number-too-large-159'              => \&crl_number_too_large_159,
+    'crl-number-largest-value-160'          => \&crl_number_largest_value_160,
+    'crl-number-too-large-160'              => \&crl_number_too_large_160,
+    'crl-lastupdate-reuse'                  => \&crl_lastupdate_reuse,
+    'crl-lastupdate-reuse-new-fn'           => \&crl_lastupdate_reuse_new_fn,
+    'crl-lastupdate-regression'             => \&crl_lastupdate_regression,
+    'crl-lastupdate-regression-new-fn'      => \&crl_lastupdate_regression_new_fn,
 );
 
 sub make_random_string
@@ -192,6 +204,144 @@ sub manifest_thisupdate_regression_new_fn
     print "---\n";
 }
 
+sub crl_lastupdate_reuse
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "crl-lastupdate-reuse ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    my $dt = DateTime->now(time_zone => 'UTC');
+    my $dt_str = $dt->strftime('%FT%T');
+
+    system("reissue-crl-and-mft --name $ta_name --crl-last-update $dt_str");
+    print "Validator run (specific CRL last-update):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --crl-last-update $dt_str");
+    print "Validator run (specific CRL last-update reused):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
+sub crl_lastupdate_reuse_new_fn
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "crl-lastupdate-reuse-new-fn ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    my $dt = DateTime->now(time_zone => 'UTC');
+    my $dt_str = $dt->strftime('%FT%T');
+
+    system("reissue-crl-and-mft --name $ta_name --crl-last-update $dt_str");
+    print "Validator run (specific CRL last-update):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --crl-last-update $dt_str");
+    print "Validator run (specific CRL last-update reused):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --crl-last-update $dt_str ".
+           "--crl-filename new.mft");
+    print "Validator run (specific CRL last-update reused, new filename):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
+sub crl_lastupdate_regression
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "crl-lastupdate-regression ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    my $dt = DateTime->now(time_zone => 'UTC')->subtract(minutes => 1);
+    my $dt_str = $dt->strftime('%FT%T');
+
+    system("reissue-crl-and-mft --name $ta_name --crl-last-update $dt_str");
+    print "Validator run (CRL last-update regression):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
+sub crl_lastupdate_regression_new_fn
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "crl-lastupdate-regression-new-fn ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    my $dt = DateTime->now(time_zone => 'UTC')->subtract(minutes => 1);
+    my $dt_str = $dt->strftime('%FT%T');
+
+    system("reissue-crl-and-mft --name $ta_name --crl-last-update $dt_str");
+    print "Validator run (CRL last-update regression):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --crl-last-update $dt_str ".
+           "--crl-filename new.mft");
+    print "Validator run (CRL last-update regression, new filename):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
 sub manifest_number_reuse
 {
     my ($validator_name, $validator_version) = @_;
@@ -212,6 +362,133 @@ sub manifest_number_reuse
 
     system("reissue-crl-and-mft --name $ta_name --mft-number 1");
     print "Validator run (reused manifest number 1):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
+sub crl_number_reuse
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "crl-number-reuse ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --crl-number 1");
+    print "Validator run (reused CRL number 1):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
+sub crl_number_reuse_new_fn
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "crl-number-reuse-new-fn ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --crl-number 1");
+    print "Validator run (reused CRL number 1):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --crl-number 1 ".
+           "--crl-filename new.crl");
+    print "Validator run (reused CRL number 1, new filename):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
+sub crl_number_regression
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "crl-number-regression ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --crl-number 3");
+    print "Validator run (set CRL number to 3):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --crl-number 2");
+    print "Validator run (set CRL number to 2):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+
+    print "---\n";
+}
+
+sub crl_number_regression_new_fn
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "crl-number-regression-new-fn ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --crl-number 3");
+    print "Validator run (set CRL number to 3):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --crl-number 2");
+    print "Validator run (set CRL number to 2):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --crl-number 2 ".
+           "--crl-filename new.crl");
+    print "Validator run (reused CRL number 2, new filename):\n";
     system("run-validator $vp");
     print "End validator run\n";
     print "---\n";
@@ -418,16 +695,135 @@ sub manifest_number_too_large_160
     print "---\n";
 }
 
+sub crl_number_largest_value_159
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "crl-number-largest-value-159 ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --crl-number $max_159");
+    print "Validator run (largest possible CRL number value):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
+sub crl_number_too_large_159
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "crl-number-too-large-159 ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --crl-number $max_159_plus_1");
+    print "Validator run (CRL number value is too large):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
+sub crl_number_largest_value_160
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "crl-number-largest-value-160 ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --crl-number $max_160");
+    print "Validator run (largest possible CRL number value):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
+sub crl_number_too_large_160
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "crl-number-too-large-160 ($validator_name $display_version)\n";
+    system("/sbin/service rsync start >/dev/null");
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 1234");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    system("reissue-crl-and-mft --name $ta_name --crl-number $max_160_plus_1");
+    print "Validator run (CRL number value is too large):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    print "---\n";
+}
+
 if (not @ARGV) {
     print "Usage: $0 {test-name} {validator-name} {validator-version}\n";
     print "\n";
     print "Test names:\n";
     print "  - manifest-number-reuse\n";
+    print "  - manifest-number-reuse-new-fn\n";
     print "  - manifest-number-regression\n";
+    print "  - manifest-number-regression-new-fn\n";
     print "  - manifest-number-largest-value-159\n";
     print "  - manifest-number-too-large-159\n";
     print "  - manifest-number-largest-value-160\n";
     print "  - manifest-number-too-large-160\n";
+    print "  - manifest-thisupdate-reuse\n";
+    print "  - manifest-thisupdate-reuse-new-fn\n";
+    print "  - manifest-thisupdate-regression\n";
+    print "  - manifest-thisupdate-regression-new-fn\n";
+    print "  - crl-number-reuse\n";
+    print "  - crl-number-reuse-new-fn\n";
+    print "  - crl-number-regression\n";
+    print "  - crl-number-regression-new-fn\n";
+    print "  - crl-number-largest-value-159\n";
+    print "  - crl-number-too-large-159\n";
+    print "  - crl-number-largest-value-160\n";
+    print "  - crl-number-too-large-160\n";
+    print "  - crl-lastupdate-reuse\n";
+    print "  - crl-lastupdate-reuse-new-fn\n";
+    print "  - crl-lastupdate-regression\n";
+    print "  - crl-lastupdate-regression-new-fn\n\n";
+
     print "Validators:\n";
     for my $name (sort keys %validators) {
         my @versions = @{$validators{$name}};
@@ -458,6 +854,18 @@ if ($test_name eq 'all') {
         manifest-thisupdate-reuse-new-fn
         manifest-thisupdate-regression
         manifest-thisupdate-regression-new-fn
+        crl-number-reuse
+        crl-number-reuse-new-fn
+        crl-number-regression
+        crl-number-regression-new-fn
+        crl-number-largest-value-159
+        crl-number-too-large-159
+        crl-number-largest-value-160
+        crl-number-too-large-160
+        crl-lastupdate-reuse
+        crl-lastupdate-reuse-new-fn
+        crl-lastupdate-regression
+        crl-lastupdate-regression-new-fn
     )};
 } else {
     my $test_fn = $test_name_to_fn{$test_name};

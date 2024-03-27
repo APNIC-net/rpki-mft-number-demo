@@ -284,6 +284,7 @@ EOF
         sia             => $sia,
         mft_sia         => $mft_sia,
         manifest_number => 0,
+        crl_filename    => "$gski.crl",
     };
     YAML::DumpFile('config.yml', $own_config);
 
@@ -426,6 +427,7 @@ sub sign_ca_request
     my $own_config = YAML::LoadFile('config.yml');
     my $aia = $own_config->{'aia'};
     my $gski = $own_config->{'gski'};
+    my $crl_filename = $own_config->{'crl_filename'};
     my $host_and_port = $own_config->{'host_and_port'};
     my $stg_repo = $own_config->{'stg_repo'};
 
@@ -436,7 +438,7 @@ sub sign_ca_request
         $extra = 'authorityInfoAccess=caIssuers;URI:'.
                  "$aia\n".
                  'crlDistributionPoints=URI:'.
-                 "rsync://$host_and_port/repo/$name/$gski.crl\n".
+                 "rsync://$host_and_port/repo/$name/$crl_filename\n".
                  'subjectInfoAccess='.$own_config->{'sia'}.','.
                                       $own_config->{'mft_sia'}."\n".
                   $extra;
@@ -519,6 +521,7 @@ sub issue_new_ee_certificate
     my $own_config = YAML::LoadFile('config.yml');
     my $aia = $own_config->{'aia'};
     my $gski = $own_config->{'gski'};
+    my $crl_filename = $own_config->{'crl_filename'};
     my $host_and_port = $own_config->{'host_and_port'};
 
     my $extra = $self->_generate_sbgp_config($ip_resources, $as_resources);
@@ -527,7 +530,7 @@ sub issue_new_ee_certificate
     $extra = 'authorityInfoAccess=caIssuers;URI:'.
              "$aia\n".
              'crlDistributionPoints=URI:'.
-             "rsync://$host_and_port/repo/$name/$gski.crl\n".
+             "rsync://$host_and_port/repo/$name/$crl_filename\n".
              'subjectInfoAccess='.(join ',', @sias)."\n".
              $extra;
 
@@ -553,12 +556,37 @@ sub issue_new_ee_certificate
 
 sub issue_crl
 {
-    my ($self) = @_;
+    my ($self, $crl_number, $crl_filename,
+        $crl_last_update_arg, $crl_next_update_arg) = @_;
 
     $self->_chdir_ca();
 
+    if (defined $crl_number) {
+        my $crlnum_path = "ca/ca/db/ca.crl.srl";
+        my $crl_number_bi = Math::BigInt->new($crl_number);
+        my $new_crlnum = $crl_number_bi->as_hex();
+        $new_crlnum =~ s/^0x//;
+        my $len = length($new_crlnum);
+        if (($len % 2) != 0) {
+            $new_crlnum = "0$new_crlnum";
+        }
+        write_file($crlnum_path, $new_crlnum);
+    }
+
+    my $crl_last_update;
+    if ($crl_last_update_arg) {
+        $crl_last_update = $strp->parse_datetime($crl_last_update_arg);
+        if (not $crl_last_update) {
+            die "'$crl_last_update_arg' is not a valid datetime string";
+        }
+    } else {
+        $crl_last_update = DateTime->now(time_zone => 'UTC');
+    }
+
     my $openssl = $self->{'openssl'}->get_openssl_path();
-    _system("$openssl ca -batch -crlexts crl_ext -config ca.cnf -gencrl ".
+    my $crl_last_update_str = $crl_last_update->strftime('%F %T');
+    _system("faketime '$crl_last_update_str' ".
+            "$openssl ca -batch -crlexts crl_ext -config ca.cnf -gencrl ".
             "-out ".CRL_FILENAME());
     _system("$openssl crl -in ".CRL_FILENAME()." -outform DER -out ".
             "crl.der.crl");
@@ -566,9 +594,14 @@ sub issue_crl
     my $own_config = YAML::LoadFile('config.yml');
     my $aia = $own_config->{'aia'};
     my $gski = $own_config->{'gski'};
+    if ($crl_filename) {
+        $own_config->{'crl_filename'} = $crl_filename;
+        YAML::DumpFile('config.yml', $own_config);
+    }
+    $crl_filename = $own_config->{'crl_filename'};
     my $stg_repo = $own_config->{'stg_repo'};
 
-    system("cp crl.der.crl $stg_repo/$gski.crl");
+    system("cp crl.der.crl $stg_repo/$crl_filename");
 
     return 1;
 }
@@ -669,7 +702,9 @@ sub publish_file
 sub publish
 {
     my ($self, $mft_number, $mft_filename,
-        $this_update_arg) = @_;
+        $this_update_arg, $next_update_arg,
+        $crl_number, $crl_filename,
+        $crl_last_update_arg, $crl_next_update_arg) = @_;
 
     $self->_chdir_ca();
     my $own_config = YAML::LoadFile('config.yml');
@@ -679,9 +714,10 @@ sub publish
         die "Unable to clear current staging repository state";
     }
 
-    $self->issue_crl();
+    $self->issue_crl($crl_number, $crl_filename,
+                     $crl_last_update_arg, $crl_next_update_arg);
     $self->issue_manifest($mft_number, $mft_filename,
-                          $this_update_arg);
+                          $this_update_arg, $next_update_arg);
 
     my $aia = $own_config->{'aia'};
     my $gski = $own_config->{'gski'};

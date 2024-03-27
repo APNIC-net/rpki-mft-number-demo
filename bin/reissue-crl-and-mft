@@ -17,6 +17,11 @@ $0 --name {ca-name}
    [--mft-number {mft-number}]
    [--mft-filename {mft-filename}]
    [--this-update {%FT%T}]
+   [--next-update {%FT%T}]
+   [--crl-number {crl-number}]
+   [--crl-filename {crl-filename}]
+   [--crl-last-update {%FT%T}]
+   [--crl-next-update {%FT%T}]
 
 Reissue the CRL and manifest for the given CA.
 EOF
@@ -29,17 +34,33 @@ GetOptions(\%options,
            'name=s',
            'mft-number=s',
            'mft-filename=s',
-           'this-update=s');
+           'this-update=s',
+           'next-update=s',
+           'crl-number=s',
+           'crl-filename=s',
+           'crl-last-update=s',
+           'crl-next-update=s');
 if (not $options{'name'}) {
     print "Please enter a name.\n";
     usage();
 }
 
-my ($name, $mft_number, $mft_filename, $this_update_arg) =
-    @options{qw(name mft-number mft-filename this-update)};
+my ($name,
+    $mft_number, $mft_filename,
+    $this_update_arg, $next_update_arg,
+    $crl_number, $crl_filename,
+    $crl_last_update_arg, $crl_next_update_arg) =
+    @options{qw(name
+                mft-number mft-filename
+                this-update next-update
+                crl-number crl-filename
+                crl-last-update crl-next-update)};
 
 my $path = "/data/cas/$name";
 my $ca = APNIC::RPKI::CA->new(ca_path => $path);
-$ca->publish($mft_number, $mft_filename, $this_update_arg);
+$ca->publish($mft_number, $mft_filename,
+             $this_update_arg, $next_update_arg,
+             $crl_number, $crl_filename,
+             $crl_last_update_arg, $crl_next_update_arg);
 
 1;
