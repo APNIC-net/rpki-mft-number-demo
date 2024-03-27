@@ -27,6 +27,7 @@ For demonstrating how RPKI validators handle specific manifest numbers
       - manifest-thisupdate-reuse-new-fn
       - manifest-thisupdate-regression
       - manifest-thisupdate-regression-new-fn
+      - manifest-thisupdate-largest-value
       - crl-number-reuse
       - crl-number-reuse-new-fn
       - crl-number-regression
@@ -39,6 +40,7 @@ For demonstrating how RPKI validators handle specific manifest numbers
       - crl-lastupdate-reuse-new-fn
       - crl-lastupdate-regression
       - crl-lastupdate-regression-new-fn
+      - crl-lastupdate-largest-value
     Validators:
       - fort (1.5.3, 1.5.4, 1.6.1)
       - octorpki (1.4.3, 1.4.4, 1.5.10)
