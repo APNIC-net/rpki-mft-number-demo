@@ -1,0 +1,51 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+use APNIC::RPKI::CA;
+
+use Cwd;
+use File::Slurp qw(write_file);
+use Getopt::Long;
+
+sub usage
+{
+    print <<EOF;
+Usage:
+$0 --name {ca-name}
+   --prefixes {prefixes}
+   --asn {asn}
+
+Issue a ROA for the given CA.
+EOF
+
+    exit(10);
+}
+
+my %options;
+GetOptions(\%options,
+           'name=s',
+           'prefixes=s',
+           'asn=s');
+if (not $options{'name'}) {
+    print "Please enter a name.\n";
+    usage();
+}
+if (not $options{'prefixes'}) {
+    print "Please enter one or more prefixes.\n";
+    usage();
+}
+if (not $options{'asn'}) {
+    print "Please enter an ASN.\n";
+    usage();
+}
+
+my ($name, $prefixes, $asn) =
+    @options{qw(name prefixes asn)};
+
+my $path = "/data/cas/$name";
+my $ca = APNIC::RPKI::CA->new(ca_path => $path);
+$ca->issue_roa($prefixes, $asn);
+
+1;

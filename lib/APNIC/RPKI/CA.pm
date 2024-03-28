@@ -20,6 +20,7 @@ use MIME::Base64 qw(encode_base64url);
 
 use APNIC::RPKI::Manifest;
 use APNIC::RPKI::OpenSSL;
+use APNIC::RPKI::ROA;
 use APNIC::RPKI::Utils qw(system_ad);
 
 use constant CA_CONFIG_PARAMETERS => qw(dir ca root_ca_ext_extra
@@ -112,6 +113,7 @@ use constant EE_KEY_FILENAME  => 'ee.key';
 use constant CRL_FILENAME     => 'crl.pem';
 
 use constant ID_CT_MFT  => '1.2.840.113549.1.9.16.1.26';
+use constant ID_CT_ROA  => '1.2.840.113549.1.9.16.1.24';
 
 use constant ID_SIA_REPO         => '1.3.6.1.5.5.7.48.5';
 use constant ID_SIA_MANIFEST     => '1.3.6.1.5.5.7.48.10';
@@ -531,7 +533,7 @@ sub issue_new_ee_certificate
              "$aia\n".
              'crlDistributionPoints=URI:'.
              "rsync://$host_and_port/repo/$name/$crl_filename\n".
-             'subjectInfoAccess='.(join ',', @sias)."\n".
+             (@sias ? 'subjectInfoAccess='.(join ',', @sias)."\n" : '').
              $extra;
 
     $self->_generate_config(signing_ca_ext_extra => $extra);
@@ -552,6 +554,49 @@ sub issue_new_ee_certificate
     my $data = read_file(EE_CERT_FILENAME());
 
     return $data;
+}
+
+sub make_random_string
+{
+    my @chars = ('a'..'z', 0..9);
+
+    return join '', map { $chars[int(rand(@chars))] } (1..8);
+}
+
+sub issue_roa
+{
+    my ($self, $prefixes, $asn) = @_;
+
+    $self->_chdir_ca();
+    my $own_config = YAML::LoadFile('config.yml');
+
+    my %ip_resources;
+    my $roa = APNIC::RPKI::ROA->new();
+    $roa->prefix_objects([]);
+    for my $prefix (split /\s*,\s*/, $prefixes) {
+        my ($p, $ml) = split /-/, $prefix;
+        $ip_resources{$p} = 1;
+        my $prefix_obj = {
+            'prefix'     => $p,
+            'max-length' => $ml,
+        };
+        push @{$roa->prefix_objects()}, $prefix_obj;
+    }
+    $roa->as_id($asn);
+
+    my $host_and_port = $own_config->{'host_and_port'};
+    my $name = $own_config->{'name'};
+    my $roa_filename = make_random_string().'.roa';
+    my $sia = ID_SIA_SIGNEDOBJECT().";URI:rsync://$host_and_port/repo/$name/$roa_filename";
+
+    my @ip_resources_list = keys %ip_resources;
+    $self->issue_new_ee_certificate(\@ip_resources_list, [], $sia);
+
+    my $stg_repo = $own_config->{'stg_repo'};
+    my $roa_proper = $self->sign_cms($roa->encode(), ID_CT_ROA());
+    write_file("$stg_repo/$roa_filename", $roa_proper);
+
+    return 1;
 }
 
 sub issue_crl
@@ -732,10 +777,6 @@ sub publish
     $self->_chdir_ca();
     my $own_config = YAML::LoadFile('config.yml');
     my $stg_repo = $own_config->{'stg_repo'};
-    my $res = system("rm -f $stg_repo/*");
-    if ($res != 0) {
-        die "Unable to clear current staging repository state";
-    }
 
     $self->issue_crl($crl_number, $crl_filename,
                      $crl_last_update_arg, $crl_next_update_arg);
@@ -746,13 +787,17 @@ sub publish
     my $gski = $own_config->{'gski'};
     my $repo = $own_config->{'repo'};
 
-    $res = system("rm -f $repo/*");
+    my $res = system("rm -f $repo/*");
     if ($res != 0) {
         die "Unable to clear current repository state";
     }
     $res = system("cp $stg_repo/* $repo/");
     if ($res != 0) {
         die "Unable to copy staging state to repository";
+    }
+    $res = system("rm -f $stg_repo/*");
+    if ($res != 0) {
+        die "Unable to clear current staging repository state";
     }
 
     return 1;

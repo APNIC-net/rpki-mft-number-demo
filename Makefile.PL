@@ -16,10 +16,13 @@ my $output = WriteMakefile(
     },
     EXE_FILES      => [ qw(bin/setup-ca
                            bin/show-ca-cert
+                           bin/issue-roa
                            bin/reissue-crl-and-mft
                            bin/init-validator
                            bin/run-validator
-                           bin/run-test) ],
+                           bin/run-test
+                           bin/ripe-validator-3-output-json-to-csvs
+                           bin/octorpki-output-json-to-csvs) ],
     PREREQ_PM      => { 'Test::More'             => 0,
                         'HTTP::Daemon'           => 0,
                         'YAML'                   => 0,

@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+use File::Slurp qw(read_file);
+use JSON::XS qw(decode_json);
+
+my $json = read_file($ARGV[0]);
+my $data = decode_json($json);
+for my $roa (@{$data->{'data'}->{'roas'}}) {
+    print $roa->{'asn'}.','.$roa->{'prefix'}.','.$roa->{'maxLength'},"\n";
+}
+
+1;

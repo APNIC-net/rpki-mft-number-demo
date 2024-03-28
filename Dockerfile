@@ -148,6 +148,8 @@ RUN source "/root/.sdkman/bin/sdkman-init.sh" \
 RUN tar xf 3.2-2021.04.07.12.55.tar.gz \
     && cd ./rpki-validator-3-3.2-2021.04.07.12.55 \
     && cd rpki-validator \
+    && sed 's/30_000/0/' -i src/main/java/net/ripe/rpki/validator3/background/ValidationScheduler.java \
+    && sed 's/futureDate(10, SECOND)/futureDate(2, SECOND)/' -i src/main/java/net/ripe/rpki/validator3/background/BackgroundJobs.java \
     && source "/root/.sdkman/bin/sdkman-init.sh" \
     && sdk use java 8.0.392-tem \
     && sdk use maven 3.9.6 \
@@ -162,7 +164,9 @@ RUN tar xf rpki-validator-2.24.tar.gz \
     && mvn install -Dmaven.test.skip=true
 
 RUN apt-get install -y libdatetime-format-strptime-perl
-RUN apt-get install -y faketime
+RUN apt-get install -y libnet-ip-xs-perl
+RUN apt-get install -y jq libjson-xs-perl
+RUN apt-get install -y net-tools psmisc
 
 RUN echo 'source /root/.sdkman/bin/sdkman-init.sh' >> root/.bashrc
 COPY . /root/rpki-mft-number-demo

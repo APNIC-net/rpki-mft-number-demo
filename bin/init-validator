@@ -42,7 +42,9 @@ if ($validator eq 'routinator') {
                    "-t tals ".
                    "--allow-dubious-hosts ".
                    "--logfile log ".
-                   "vrps > vrps;\ncat log");
+                   "vrps > vrps;\n".
+                   "cat vrps | cut -d, -f1-3 | tail -n -1 > roas-common;\n".
+                   "cat log");
     } else {
         write_file("run-validator-link",
                    "#!/bin/sh\n".
@@ -53,7 +55,9 @@ if ($validator eq 'routinator') {
                    "--extra-tals-dir tals ".
                    "--allow-dubious-hosts ".
                    "--logfile log ".
-                   "vrps > vrps;\ncat log");
+                   "vrps > vrps;\n".
+                   "cat vrps | cut -d, -f1-3 | tail -n -1 > roas-common;\n".
+                   "cat log");
     }
 } elsif ($validator eq 'rpki-client') {
     mkdir "cache";
@@ -64,7 +68,8 @@ if ($validator eq 'routinator') {
     }
     write_file("run-validator-link",
                "#!/bin/sh\n$exec ".
-               "-c -t tals/tal.tal -d cache output >/dev/null");
+               "-c -t tals/tal.tal -d cache output >/dev/null;\n".
+               "cat output/csv | cut -d, -f1-3 | tail -n -1 > roas-common;\n");
 } elsif ($validator eq 'fort') {
     mkdir "cache";
     my $exec = "/opt/fort-$version/bin/fort";
@@ -76,12 +81,24 @@ if ($validator eq 'routinator') {
                "--tal tals ".
                "--local-repository cache ".
                "--output.roa roas ".
-               "--mode standalone");
+               "--mode standalone;\n".
+               "cat roas | tail -n -1 > roas-common;\n");
 } elsif ($validator eq 'octorpki') {
     mkdir "cache";
     my $exec = "/opt/octorpki-$version/bin/octorpki";
     if (not -e $exec) {
         die "Validator version number is invalid.";
+    }
+    # Have to download the TA certificate separately, for some reason.
+    system("mkdir -p cache/localhost/repo");
+    my ($ta_path) = read_file("tals/tal.tal");
+    chomp $ta_path;
+    my $target = $ta_path;
+    $target =~ s/rsync:\/\//cache\//;
+
+    my $res = system("/usr/bin/rsync -vrlt $ta_path $target");
+    if ($res != 0) {
+        die "Unable to rsync TA certificate";
     }
     write_file("run-validator-link",
                "#!/bin/sh\n".
@@ -89,7 +106,8 @@ if ($validator eq 'routinator') {
                "-allow.root ".
                "-tal.root=tals/tal.tal ".
                "-mode=oneoff ".
-               "-output.sign=false");
+               "-output.sign=false;\n".
+               "octorpki-output-json-to-csvs output.json > roas-common;\n");
 } elsif ($validator eq 'ripe-validator') {
     mkdir "cache";
     system("touch ripe-validator");
@@ -99,8 +117,9 @@ if ($validator eq 'routinator') {
     }
     write_file("run-validator-link",
                "#!/bin/bash\n".
-               "java -jar $exec -t tals/tal.tal --output-dir ./cache >myout 2>&1;\n".
-               "cat myout | grep -v 'PASSED' | grep -v 'is VALID';\n");
+               "java -jar $exec -t tals/tal.tal --output-dir ./cache -r roas >myout 2>&1;\n".
+               "cat myout | grep -v 'PASSED' | grep -v 'is VALID';\n".
+               "cat roas | tail -n -1 | cut -d, -f2-4 > roas-common;\n");
 } elsif ($validator eq 'ripe-validator-3') {
     mkdir "cache";
     mkdir "rsync";
@@ -128,10 +147,18 @@ if ($validator eq 'routinator') {
             push @new_config, "$attr=$state_dir/rsync";
         } elsif ($attr eq 'management.endpoint.prometheus.enabled') {
             push @new_config, "$attr=false";
+        } elsif ($attr eq 'rpki.validator.validated.objects.uri') {
+            next;
+        } elsif ($attr eq 'rpki.validator.rsync-only') {
+            next;
         } else {
             push @new_config, $line;
         }
     }
+    push @new_config,
+         "rpki.validator.validated.objects.uri=http://localhost:$port/api/objects/validated";
+    push @new_config,
+        "rpki.validator.rsync-only=true";
     for (@new_config) {
         $_ .= "\n";
     }
@@ -144,13 +171,16 @@ if ($validator eq 'routinator') {
 
     write_file("run-validator-link",
                "#!/bin/bash\n".
-               "timeout 15 ".
                "java -Dspring.config.location=classpath:/application.properties,file:./deb.properties ".
-               "-jar $exec >myout 2>&1;\n".
+               "-jar $exec >myout 2>&1 &\n".
+               "sleep 10;\n".
+               "curl http://localhost:$port/api/objects/validated > validated;\n".
+               "killall -9 java;\n".
                "cat myout ".
                "| grep -e 'Tree validation succeeded' ".
                       "-e 'Validation result' ".
-                      "-e 'Starting tree validation';\n");
+                      "-e 'Starting tree validation';\n".
+               "ripe-validator-3-output-json-to-csvs validated > roas-common;\n");
 } else {
     die "Invalid validator name '$validator'";
 }
