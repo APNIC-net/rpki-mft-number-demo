@@ -286,11 +286,50 @@ EOF
         sia             => $sia,
         mft_sia         => $mft_sia,
         manifest_number => 0,
+        mft_filename    => "$gski.mft",
         crl_filename    => "$gski.crl",
+        ip_resources    => $ip_resources,
+        as_resources    => $as_resources,
+        common_name     => $common_name,
+        repo_dir        => $repo_dir,
     };
     YAML::DumpFile('config.yml', $own_config);
 
     return ($key_only ? 1 : $tal_path);
+}
+
+sub update_mft_filename
+{
+    my ($self, $mft_filename) = @_;
+
+    my $own_config = $self->get_config();
+    $own_config->{'mft_filename'} = $mft_filename;
+    my $host_and_port = $own_config->{'host_and_port'};
+    my $name = $own_config->{'name'};
+    my $mft_sia = ID_SIA_MANIFEST().";URI:rsync://$host_and_port/repo/$name/$mft_filename";
+    $own_config->{'mft_sia'} = $mft_sia;
+
+    my $ip_resources = $own_config->{'ip_resources'};
+    my $as_resources = $own_config->{'as_resources'};
+    my $extra = $self->_generate_sbgp_config($ip_resources, $as_resources);
+    my $sia = ID_SIA_REPO().";URI:rsync://$host_and_port/repo/$name/";
+    $extra = "subjectInfoAccess=$sia,$mft_sia\n$extra";
+    $self->_generate_config(root_ca_ext_extra => $extra);
+
+    my $common_name = $own_config->{'common_name'};
+    my $repo_dir = $own_config->{'repo_dir'};
+    my $gski = $own_config->{'gski'};
+
+    my $openssl = $self->{'openssl'}->get_openssl_path();
+    _system("$openssl req -new -config ca.cnf -extensions root_ca_ext ".
+	    "-x509 -key ca/ca/private/ca.key -out ca/ca.crt -subj '/CN=$common_name'");
+    _system("$openssl x509 -in ca/ca.crt -outform DER -out ca/ca.der.cer");
+    _system("cp ca/ca.der.cer $repo_dir/$gski.cer");
+
+    $self->_chdir_ca();
+    YAML::DumpFile('config.yml', $own_config);
+
+    return 1;
 }
 
 sub get_config
@@ -688,17 +727,16 @@ sub issue_manifest
     my ($self, $mft_number, $mft_filename,
         $this_update_arg, $next_update_arg) = @_;
 
+    if ($mft_filename) {
+        $self->update_mft_filename($mft_filename);
+    }
     my $own_config = YAML::LoadFile('config.yml');
+    my $new_mft_filename = $own_config->{'mft_filename'};
+
     my $sia = $own_config->{'mft_sia'};
     $sia =~ s/\.10;/.11;/;
     $self->issue_new_ee_certificate(undef, undef, $sia);
     my $aia = $own_config->{'aia'};
-    if ($mft_filename) {
-        $own_config->{'mft_filename'} = $mft_filename;
-    }
-    my $new_mft_filename =
-        $own_config->{'mft_filename'}
-            || $own_config->{'gski'}.'.mft';
 
     if (defined $mft_number) {
         $own_config->{'manifest_number'} = $mft_number;
@@ -774,14 +812,14 @@ sub publish
         $crl_number, $crl_filename,
         $crl_last_update_arg, $crl_next_update_arg) = @_;
 
-    $self->_chdir_ca();
-    my $own_config = YAML::LoadFile('config.yml');
-    my $stg_repo = $own_config->{'stg_repo'};
-
     $self->issue_crl($crl_number, $crl_filename,
                      $crl_last_update_arg, $crl_next_update_arg);
     $self->issue_manifest($mft_number, $mft_filename,
                           $this_update_arg, $next_update_arg);
+
+    $self->_chdir_ca();
+    my $own_config = YAML::LoadFile('config.yml');
+    my $stg_repo = $own_config->{'stg_repo'};
 
     my $aia = $own_config->{'aia'};
     my $gski = $own_config->{'gski'};

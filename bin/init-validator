@@ -43,7 +43,7 @@ if ($validator eq 'routinator') {
                    "--allow-dubious-hosts ".
                    "--logfile log ".
                    "vrps > vrps;\n".
-                   "cat vrps | cut -d, -f1-3 | tail -n -1 > roas-common;\n".
+                   "cat vrps | cut -d, -f1-3 | grep -v 'Max Length' > roas-common;\n".
                    "cat log");
     } else {
         write_file("run-validator-link",
@@ -56,7 +56,7 @@ if ($validator eq 'routinator') {
                    "--allow-dubious-hosts ".
                    "--logfile log ".
                    "vrps > vrps;\n".
-                   "cat vrps | cut -d, -f1-3 | tail -n -1 > roas-common;\n".
+                   "cat vrps | cut -d, -f1-3 | grep -v 'Max Length' > roas-common;\n".
                    "cat log");
     }
 } elsif ($validator eq 'rpki-client') {
@@ -69,7 +69,7 @@ if ($validator eq 'routinator') {
     write_file("run-validator-link",
                "#!/bin/sh\n$exec ".
                "-c -t tals/tal.tal -d cache output >/dev/null;\n".
-               "cat output/csv | cut -d, -f1-3 | tail -n -1 > roas-common;\n");
+               "cat output/csv | cut -d, -f1-3 | grep -v 'Max Length' > roas-common;\n");
 } elsif ($validator eq 'fort') {
     mkdir "cache";
     my $exec = "/opt/fort-$version/bin/fort";
@@ -82,7 +82,7 @@ if ($validator eq 'routinator') {
                "--local-repository cache ".
                "--output.roa roas ".
                "--mode standalone;\n".
-               "cat roas | tail -n -1 > roas-common;\n");
+               "cat roas | grep -v 'length' > roas-common;\n");
 } elsif ($validator eq 'octorpki') {
     mkdir "cache";
     my $exec = "/opt/octorpki-$version/bin/octorpki";
@@ -119,7 +119,7 @@ if ($validator eq 'routinator') {
                "#!/bin/bash\n".
                "java -jar $exec -t tals/tal.tal --output-dir ./cache -r roas >myout 2>&1;\n".
                "cat myout | grep -v 'PASSED' | grep -v 'is VALID';\n".
-               "cat roas | tail -n -1 | cut -d, -f2-4 > roas-common;\n");
+               "cat roas | grep -v 'Max Length' | cut -d, -f2-4 > roas-common;\n");
 } elsif ($validator eq 'ripe-validator-3') {
     mkdir "cache";
     mkdir "rsync";

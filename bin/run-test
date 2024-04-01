@@ -5,6 +5,7 @@ use strict;
 
 use autodie qw(:all);
 use DateTime;
+use File::Slurp qw(read_file);
 
 my %validators = (
     routinator         => [qw(0.11.0 0.12.0 0.13.2 main)],
@@ -68,6 +69,37 @@ sub get_display_version
     return $display_version;
 }
 
+sub issue_new_roa
+{
+    my ($name) = @_;
+
+    my $asn = time();
+    system("issue-roa --name $name --asn $asn --prefixes 255.0.0.0/24");
+    print "Issued ROA with ASN $asn\n";
+
+    return $asn;
+}
+
+sub verify_new_roa
+{
+    my ($vp, $count, $asn) = @_;
+
+    my @roas = read_file("$vp/roas-common");
+    if (@roas == $count) {
+        print "Got expected number of ROAs ($count)\n";
+    } else {
+        print "Did not get expected number of ROAs ($count): ".
+              "got ".(scalar @roas)." instead\n";
+    }
+
+    my @matches = grep { /$asn/ } @roas;
+    if (@matches) {
+        print "Found ROA matching ASN ($asn)\n";
+    } else {
+        print "Did not find ROA matching ASN ($asn)\n";
+    }
+}
+
 sub manifest_thisupdate_reuse
 {
     my ($validator_name, $validator_version) = @_;
@@ -76,7 +108,7 @@ sub manifest_thisupdate_reuse
     print "manifest-thisupdate-reuse ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -95,10 +127,13 @@ sub manifest_thisupdate_reuse
     print "End validator run\n";
     sleep(1);
 
+    my $asn = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --this-update $dt_str");
     print "Validator run (specific this-update reused):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn);
+
     print "---\n";
 }
 
@@ -110,7 +145,7 @@ sub manifest_thisupdate_reuse_new_fn
     print "manifest-thisupdate-reuse-new-fn ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -129,17 +164,21 @@ sub manifest_thisupdate_reuse_new_fn
     print "End validator run\n";
     sleep(1);
 
+    my $asn1 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --this-update $dt_str");
     print "Validator run (specific this-update reused):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     sleep(1);
 
+    my $asn2 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --this-update $dt_str ".
            "--mft-filename new.mft");
     print "Validator run (specific this-update reused, new filename):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn2);
     print "---\n";
 }
 
@@ -151,7 +190,7 @@ sub manifest_thisupdate_regression
     print "manifest-thisupdate-regression ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -164,10 +203,12 @@ sub manifest_thisupdate_regression
     my $dt = DateTime->now(time_zone => 'UTC')->subtract(minutes => 1);
     my $dt_str = $dt->strftime('%FT%T');
 
+    my $asn = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --this-update $dt_str");
     print "Validator run (this-update regression):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn);
     print "---\n";
 }
 
@@ -179,7 +220,7 @@ sub manifest_thisupdate_regression_new_fn
     print "manifest-thisupdate-regression-new-fn ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -192,17 +233,21 @@ sub manifest_thisupdate_regression_new_fn
     my $dt = DateTime->now(time_zone => 'UTC')->subtract(minutes => 1);
     my $dt_str = $dt->strftime('%FT%T');
 
+    my $asn1 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --this-update $dt_str");
     print "Validator run (this-update regression):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     sleep(1);
 
+    my $asn2 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --this-update $dt_str ".
            "--mft-filename new.mft");
     print "Validator run (this-update regression, new filename):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn2);
     print "---\n";
 }
 
@@ -214,7 +259,7 @@ sub manifest_thisupdate_largest_value
     print "manifest-thisupdate-largest-value ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -243,17 +288,21 @@ sub manifest_thisupdate_largest_value
     print "End validator run\n";
     sleep(1);
 
+    my $asn1 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name ".
            "--this-update $dt_str --next-update $dt_str");
     print "Validator run (this-update largest value reused):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     sleep(1);
 
+    my $asn2 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --mft-filename new.mft");
     print "Validator run (this-update regression with new filename):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn2);
     print "---\n";
 }
 
@@ -265,7 +314,7 @@ sub crl_lastupdate_reuse
     print "crl-lastupdate-reuse ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -284,10 +333,12 @@ sub crl_lastupdate_reuse
     print "End validator run\n";
     sleep(1);
 
+    my $asn1 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --crl-last-update $dt_str");
     print "Validator run (specific CRL last-update reused):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     print "---\n";
 }
 
@@ -299,7 +350,7 @@ sub crl_lastupdate_reuse_new_fn
     print "crl-lastupdate-reuse-new-fn ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -325,10 +376,14 @@ sub crl_lastupdate_reuse_new_fn
     sleep(1);
 
     system("reissue-crl-and-mft --name $ta_name --crl-last-update $dt_str ".
-           "--crl-filename new.mft");
+           "--crl-filename new.crl");
+    my $asn1 = issue_new_roa($ta_name);
+    system("reissue-crl-and-mft --name $ta_name --crl-last-update $dt_str ".
+           "--crl-filename new.crl");
     print "Validator run (specific CRL last-update reused, new filename):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     print "---\n";
 }
 
@@ -340,7 +395,7 @@ sub crl_lastupdate_regression
     print "crl-lastupdate-regression ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -353,10 +408,12 @@ sub crl_lastupdate_regression
     my $dt = DateTime->now(time_zone => 'UTC')->subtract(minutes => 1);
     my $dt_str = $dt->strftime('%FT%T');
 
+    my $asn1 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --crl-last-update $dt_str");
     print "Validator run (CRL last-update regression):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     print "---\n";
 }
 
@@ -368,7 +425,7 @@ sub crl_lastupdate_regression_new_fn
     print "crl-lastupdate-regression-new-fn ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -388,10 +445,14 @@ sub crl_lastupdate_regression_new_fn
     sleep(1);
 
     system("reissue-crl-and-mft --name $ta_name --crl-last-update $dt_str ".
-           "--crl-filename new.mft");
+           "--crl-filename new.crl");
+    my $asn1 = issue_new_roa($ta_name);
+    system("reissue-crl-and-mft --name $ta_name --crl-last-update $dt_str ".
+           "--crl-filename new.crl");
     print "Validator run (CRL last-update regression, new filename):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     print "---\n";
 }
 
@@ -403,7 +464,7 @@ sub crl_lastupdate_largest_value
     print "crl-lastupdate-largest-value ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -438,11 +499,14 @@ sub crl_lastupdate_largest_value
     system("run-validator $vp");
     print "End validator run\n";
     sleep(1);
-    
+
+    system("reissue-crl-and-mft --name $ta_name --crl-filename new.crl");
+    my $asn1 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --crl-filename new.crl");
     print "Validator run (CRL last-update regression, new filename):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     print "---\n";
 }
 
@@ -454,7 +518,7 @@ sub manifest_number_reuse
     print "manifest-number-reuse ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -464,10 +528,12 @@ sub manifest_number_reuse
     print "End validator run\n";
     sleep(1);
 
+    my $asn1 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --mft-number 1");
     print "Validator run (reused manifest number 1):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     print "---\n";
 }
 
@@ -479,7 +545,7 @@ sub crl_number_reuse
     print "crl-number-reuse ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -489,10 +555,12 @@ sub crl_number_reuse
     print "End validator run\n";
     sleep(1);
 
+    my $asn1 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --crl-number 1");
     print "Validator run (reused CRL number 1):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     print "---\n";
 }
 
@@ -504,7 +572,7 @@ sub crl_number_reuse_new_fn
     print "crl-number-reuse-new-fn ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -522,9 +590,13 @@ sub crl_number_reuse_new_fn
 
     system("reissue-crl-and-mft --name $ta_name --crl-number 1 ".
            "--crl-filename new.crl");
+    my $asn1 = issue_new_roa($ta_name);
+    system("reissue-crl-and-mft --name $ta_name --crl-number 1 ".
+           "--crl-filename new.crl");
     print "Validator run (reused CRL number 1, new filename):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     print "---\n";
 }
 
@@ -536,7 +608,7 @@ sub crl_number_regression
     print "crl-number-regression ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -552,11 +624,12 @@ sub crl_number_regression
     print "End validator run\n";
     sleep(1);
 
+    my $asn1 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --crl-number 2");
     print "Validator run (set CRL number to 2):\n";
     system("run-validator $vp");
     print "End validator run\n";
-
+    verify_new_roa($vp, 1, $asn1);
     print "---\n";
 }
 
@@ -568,7 +641,7 @@ sub crl_number_regression_new_fn
     print "crl-number-regression-new-fn ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -592,9 +665,13 @@ sub crl_number_regression_new_fn
 
     system("reissue-crl-and-mft --name $ta_name --crl-number 2 ".
            "--crl-filename new.crl");
+    my $asn1 = issue_new_roa($ta_name);
+    system("reissue-crl-and-mft --name $ta_name --crl-number 2 ".
+           "--crl-filename new.crl");
     print "Validator run (reused CRL number 2, new filename):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     print "---\n";
 }
 
@@ -606,7 +683,7 @@ sub manifest_number_reuse_new_fn
     print "manifest-number-reuse-new-fn ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -622,11 +699,13 @@ sub manifest_number_reuse_new_fn
     print "End validator run\n";
     sleep(1);
 
+    my $asn1 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --mft-number 1 ".
            "--mft-filename new.mft");
     print "Validator run (reused manifest number 1, new filename):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     print "---\n";
 }
 
@@ -638,7 +717,7 @@ sub manifest_number_regression
     print "manifest-number-regression ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -654,10 +733,12 @@ sub manifest_number_regression
     print "End validator run\n";
     sleep(1);
 
+    my $asn1 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --mft-number 2");
     print "Validator run (manifest number 2):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     print "---\n";
 }
 
@@ -669,7 +750,7 @@ sub manifest_number_regression_new_fn
     print "manifest-number-regression-new-fn ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -691,11 +772,13 @@ sub manifest_number_regression_new_fn
     print "End validator run\n";
     sleep(1);
 
+    my $asn1 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --mft-number 2 ".
            "--mft-filename new.mft");
     print "Validator run (manifest number 2, new filename):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     print "---\n";
 }
 
@@ -707,7 +790,7 @@ sub manifest_number_largest_value_159
     print "manifest-number-largest-value-159 ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -732,7 +815,7 @@ sub manifest_number_too_large_159
     print "manifest-number-too-large-159 ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -742,10 +825,12 @@ sub manifest_number_too_large_159
     print "End validator run\n";
     sleep(1);
 
+    my $asn1 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --mft-number $max_159_plus_1");
     print "Validator run (manifest number value is too large):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     print "---\n";
 }
 
@@ -757,7 +842,7 @@ sub manifest_number_largest_value_160
     print "manifest-number-largest-value-160 ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -782,7 +867,7 @@ sub manifest_number_too_large_160
     print "manifest-number-too-large-160 ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -792,10 +877,12 @@ sub manifest_number_too_large_160
     print "End validator run\n";
     sleep(1);
 
+    my $asn1 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --mft-number $max_160_plus_1");
     print "Validator run (manifest number value is too large):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     print "---\n";
 }
 
@@ -807,7 +894,7 @@ sub crl_number_largest_value_159
     print "crl-number-largest-value-159 ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -832,7 +919,7 @@ sub crl_number_too_large_159
     print "crl-number-too-large-159 ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -842,10 +929,12 @@ sub crl_number_too_large_159
     print "End validator run\n";
     sleep(1);
 
+    my $asn1 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --crl-number $max_159_plus_1");
     print "Validator run (CRL number value is too large):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     print "---\n";
 }
 
@@ -857,7 +946,7 @@ sub crl_number_largest_value_160
     print "crl-number-largest-value-160 ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -882,7 +971,7 @@ sub crl_number_too_large_160
     print "crl-number-too-large-160 ($validator_name $display_version)\n";
     system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
-    system("setup-ca --name $ta_name --resources 1234");
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
     my $vp = "/tmp/$validator_dir";
     system("init-validator $vp last-tal-path ".
@@ -892,10 +981,12 @@ sub crl_number_too_large_160
     print "End validator run\n";
     sleep(1);
 
+    my $asn1 = issue_new_roa($ta_name);
     system("reissue-crl-and-mft --name $ta_name --crl-number $max_160_plus_1");
     print "Validator run (CRL number value is too large):\n";
     system("run-validator $vp");
     print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
     print "---\n";
 }
 

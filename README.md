@@ -88,7 +88,7 @@ so:
 ### Current results
 
 See [current-results.txt](current-results.txt) for the output from
-running all tests for all current validators plus OctoRPKI.
+running all tests for all validators.
 
 #### Summary of current results
 
@@ -101,13 +101,10 @@ running all tests for all current validators plus OctoRPKI.
     - Routinator >= r385e74d and rpki-client >= 8.7 reset (in effect)
       the locally-stored manifest number for the CA when the manifest
       filename changes.
-    - FORT reports errors on changing the filename.
  - manifest-number-largest-value-159
  - manifest-number-too-large-159
-    - Routinator limits the manifest number to the largest signed
-      160-bit value.
-    - FORT reports generic errors on attempting to validate a manifest
-      with either of these values.
+    - Routinator and FORT limit the manifest number to the largest
+      signed 160-bit value.
     - OctoRPKI and rpki-client appear to process the repository
       successfully.
  - manifest-number-largest-value-160
@@ -131,6 +128,58 @@ running all tests for all current validators plus OctoRPKI.
     - rpki-client >= 9.0 reset (in effect) the locally-stored
       this-update value for the CA when the manifest filename changes.
     - FORT reports errors on changing the filename.
+ - manifest-thisupdate-largest-value
+    - FORT does not appear to support this value, but reverting to an
+      earlier value will yield a successful validation result.
+    - OctoRPKI does not appear to support this value, and reverting to
+      an earlier value does not fix the problem.
+    - Routinator v0.11.0 rejects the manifests that have the largest
+      thisUpdate value, returning a non-specific error message.
+      Reverting to an earlier value fixes the problem.  The later
+      versions of Routinator reject the manifests with a "premature
+      manifest" error, and reverting to an earlier value fixes the
+      problem.
+    - rpki-client rejects the manifests due to their not yet being
+      valid, because of thisUpdate being in the future.  Reverting to
+      an earlier value fixes the problem.
+ - crl-number-reuse
+ - crl-number-regression
+ - crl-number-reuse-new-fn
+ - crl-number-regression-new-fn
+    - CRL number reuse/regression does not cause problems in any
+      validator.
+    - Changing the CRL filename is fine for all validators except
+      Routinator.  (It is possible that this is a problem in the test
+      itself, though, since it reports that the certificate's CRL
+      differs from the manifest's.)
+ - crl-number-largest-value-159
+ - crl-number-too-large-159
+    - As with manifest numbers, Routinator limits the CRL number to
+      the largest signed 160-bit value.
+    - The other validators appear to process the repository
+      successfully for both tests.
+ - crl-number-largest-value-160
+ - crl-number-too-large-160
+    - rpki-client >= 8.7 limits the CRL number to the largest unsigned
+      160-bit value.
+    - The other validators (aside from Routinator, which limits the
+      number to the largest signed 160-bit value) appear to process
+      the repository successfully for both tests.
+ - crl-lastupdate-reuse
+ - crl-lastupdate-regression
+ - crl-lastupdate-reuse-new-fn
+ - crl-lastupdate-regression-new-fn
+    - Each validator appears to process the repository successfully
+      for each test.
+ - crl-lastupdate-largest-value
+    - FORT does not appear to support this value, but reverting to an
+      earlier value will yield a successful validation result.
+    - OctoRPKI appears to support this value.
+    - The other validators appear to process the repository
+      successfully for each test.
+
+(This summary excludes the RIPE validators, since they have been
+formally deprecated for many years now.)
 
 ### Todo
 
