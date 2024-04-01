@@ -148,10 +148,7 @@ running all tests for all validators.
  - crl-number-regression-new-fn
     - CRL number reuse/regression does not cause problems in any
       validator.
-    - Changing the CRL filename is fine for all validators except
-      Routinator.  (It is possible that this is a problem in the test
-      itself, though, since it reports that the certificate's CRL
-      differs from the manifest's.)
+    - Changing the CRL filename is fine for all validators.
  - crl-number-largest-value-159
  - crl-number-too-large-159
     - As with manifest numbers, Routinator limits the CRL number to
@@ -174,7 +171,6 @@ running all tests for all validators.
  - crl-lastupdate-largest-value
     - FORT does not appear to support this value, but reverting to an
       earlier value will yield a successful validation result.
-    - OctoRPKI appears to support this value.
     - The other validators appear to process the repository
       successfully for each test.
 
