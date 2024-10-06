@@ -28,13 +28,19 @@ use Test::More tests => 4;
     my $ca_dirname      = APNIC::RPKI::CA::make_random_string();
     my $ca_path         = tempdir();
     my $ca_name         = 'test-ca';
+    my $ca_rrdp_dir     = tempdir();
+    my $ca_rrdp_dirname = 'rrdp-dirname';
+    my $ca_rrdp_host    = 'localhost';
+    my $ca_rrdp_port    = 443;
     my @ca_ip_resources = ('1.0.0.0/16');
     my @ca_as_resources = ('60000-60010');
 
     my $ca = APNIC::RPKI::CA->new(ca_path => $ca_path);
     $ca->initialise($ca_name, 1, $stg_repo, $repo,
                     $ca_dirname, 'localhost', 873,
-                    \@ca_ip_resources, \@ca_as_resources);
+                    \@ca_ip_resources, \@ca_as_resources,
+                    $ca_rrdp_dir, $ca_rrdp_dirname,
+                    $ca_rrdp_host, $ca_rrdp_port);
     my $request =
         $ca->get_ca_request($ca_name, \@ca_ip_resources,
                             \@ca_as_resources);

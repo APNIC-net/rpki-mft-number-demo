@@ -125,6 +125,7 @@ use constant ID_CT_ROA  => '1.2.840.113549.1.9.16.1.24';
 
 use constant ID_SIA_REPO         => '1.3.6.1.5.5.7.48.5';
 use constant ID_SIA_MANIFEST     => '1.3.6.1.5.5.7.48.10';
+use constant ID_SIA_RRDP         => '1.3.6.1.5.5.7.48.13';
 use constant ID_SIA_SIGNEDOBJECT => '1.3.6.1.5.5.7.48.11';
 
 our $DEBUG = 0;
@@ -209,7 +210,7 @@ sub initialise
 {
     my ($self, $common_name, $key_only, $stg_repo_dir, $repo_dir,
         $repo_dirname, $host, $port, $ip_resources, $as_resources,
-        $rrdp_dir, $rrdp_host, $rrdp_port) = @_;
+        $rrdp_dir, $rrdp_dirname, $rrdp_host, $rrdp_port) = @_;
 
     if (not defined $port) {
         $port = 873;
@@ -219,6 +220,15 @@ sub initialise
     }
     my $port_str = ($port == 873) ? "" : ":$port";
     my $host_and_port = $host.$port_str;
+
+    if (not defined $rrdp_port) {
+        $rrdp_port = 443;
+    }
+    if (not defined $rrdp_host) {
+        $rrdp_host = "";
+    }
+    my $rrdp_port_str = ($rrdp_port == 443) ? "" : ":$rrdp_port";
+    my $rrdp_host_and_port = $rrdp_host.$rrdp_port_str;
 
     $self->_chdir_ca();
 
@@ -258,6 +268,10 @@ sub initialise
     my $aia = undef;
     my $sia = ID_SIA_REPO().";URI:rsync://$host_and_port/repo/$repo_dirname/";
     my $mft_sia = ID_SIA_MANIFEST().";URI:rsync://$host_and_port/repo/$repo_dirname/$gski.mft";
+    my $rrdp_sia = "";
+    if ($rrdp_dir) {
+        $rrdp_sia = ID_SIA_RRDP().";URI:https://$rrdp_host_and_port/$rrdp_dirname/notify.xml";
+    }
 
     my $tal_path = "$repo_dir/$gski.tal";
 
@@ -299,6 +313,7 @@ EOF
         gski            => $gski,
         sia             => $sia,
         mft_sia         => $mft_sia,
+        rrdp_sia        => $rrdp_sia,
         manifest_number => 0,
         mft_filename    => "$gski.mft",
         crl_filename    => "$gski.crl",
@@ -307,6 +322,7 @@ EOF
         common_name     => $common_name,
         repo_dir        => $repo_dir,
         rrdp_dir        => $rrdp_dir,
+        rrdp_dirname    => $rrdp_dirname,
         rrdp_host       => $rrdp_host,
         rrdp_port       => $rrdp_port,
     };
@@ -375,8 +391,11 @@ sub get_ca_request
     my $own_config = $self->get_config();
     my $sia = $own_config->{'sia'};
     my $mft_sia = $own_config->{'mft_sia'};
+    my $rrdp_sia = $own_config->{'rrdp_sia'};
     my $extra = $self->_generate_sbgp_config($ip_resources, $as_resources);
-    $extra = "subjectInfoAccess=$sia,$mft_sia\n$extra";
+    $extra = "subjectInfoAccess=$sia,$mft_sia".
+             ($rrdp_sia ? ",$rrdp_sia" : "")."\n".
+             $extra;
     $self->_generate_config(ca_ext_extra => $extra);
 
     my $openssl = $self->{'openssl'}->get_openssl_path();
