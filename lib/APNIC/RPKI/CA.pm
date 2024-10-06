@@ -23,7 +23,9 @@ use APNIC::RPKI::OpenSSL;
 use APNIC::RPKI::ROA;
 use APNIC::RPKI::Utils qw(system_ad);
 
-use constant CA_CONFIG_PARAMETERS => qw(dir ca root_ca_ext_extra
+use constant CA_CONFIG_PARAMETERS => qw(dir ca
+                                        root_ca_ext_extra
+                                        ca_ext_extra
                                         signing_ca_ext_extra);
 
 use constant CA_CONFIG => <<EOF;
@@ -70,7 +72,7 @@ email_in_dn             = no
 preserve                = no
 name_opt                = ca_default
 cert_opt                = ca_default
-copy_extensions         = none
+copy_extensions         = copy
 x509_extensions         = signing_ca_ext
 default_crl_days        = 1
 crl_extensions          = crl_ext
@@ -95,6 +97,12 @@ subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid:always
 certificatePolicies     = critical,\@pqs
 {root_ca_ext_extra}
+
+[ ca_ext ]
+keyUsage                = critical,keyCertSign,cRLSign
+basicConstraints        = critical,CA:true
+subjectKeyIdentifier    = hash
+{ca_ext_extra}
 
 [ signing_ca_ext ]
 keyUsage                = critical,digitalSignature
@@ -200,7 +208,8 @@ sub _generate_config
 sub initialise
 {
     my ($self, $common_name, $key_only, $stg_repo_dir, $repo_dir,
-        $repo_dirname, $host, $port, $ip_resources, $as_resources) = @_;
+        $repo_dirname, $host, $port, $ip_resources, $as_resources,
+        $rrdp_dir, $rrdp_host, $rrdp_port) = @_;
 
     if (not defined $port) {
         $port = 873;
@@ -297,6 +306,9 @@ EOF
         as_resources    => $as_resources,
         common_name     => $common_name,
         repo_dir        => $repo_dir,
+        rrdp_dir        => $rrdp_dir,
+        rrdp_host       => $rrdp_host,
+        rrdp_port       => $rrdp_port,
     };
     YAML::DumpFile('config.yml', $own_config);
 
@@ -360,8 +372,17 @@ sub get_ca_request
 
     $self->_chdir_ca();
 
+    my $own_config = $self->get_config();
+    my $sia = $own_config->{'sia'};
+    my $mft_sia = $own_config->{'mft_sia'};
+    my $extra = $self->_generate_sbgp_config($ip_resources, $as_resources);
+    $extra = "subjectInfoAccess=$sia,$mft_sia\n$extra";
+    $self->_generate_config(ca_ext_extra => $extra);
+
     my $openssl = $self->{'openssl'}->get_openssl_path();
-    _system("$openssl req -new -key ca/ca/private/ca.key ".
+    _system("$openssl req -new ".
+            "-config ca.cnf -reqexts ca_ext ".
+            "-key ca/ca/private/ca.key ".
             "-out ca/ca.req -subj '/CN=$common_name'");
 
     my $data = read_file('ca/ca.req');
@@ -487,8 +508,6 @@ sub sign_ca_request
                  "$aia\n".
                  'crlDistributionPoints=URI:'.
                  "rsync://$host_and_port/repo/$repo_dirname/$crl_filename\n".
-                 'subjectInfoAccess='.$own_config->{'sia'}.','.
-                                      $own_config->{'mft_sia'}."\n".
                   $extra;
     }
 
