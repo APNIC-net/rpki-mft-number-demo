@@ -2,7 +2,7 @@
 
 For demonstrating how RPKI validators handle specific manifest numbers
 (and other manifest/CRL fields) and related transitions.  See
-[draft-harrison-sidrops-manifest-numbers](https://datatracker.ietf.org/doc/draft-harrison-sidrops-manifest-numbers/).
+[draft-ietf-sidrops-manifest-numbers](https://datatracker.ietf.org/doc/draft-ietf-sidrops-manifest-numbers/).
 
 ### Build
 
@@ -10,7 +10,8 @@ For demonstrating how RPKI validators handle specific manifest numbers
 
 ### Usage
 
-    $ docker run -it apnic/rpki-mft-number-demo /bin/bash
+--add-host rpki.example.net:127.0.0.1
+    $ docker run -it --add-host rpki.example.net:127.0.0.1 apnic/rpki-mft-number-demo /bin/bash
     # run-test
     Usage: /usr/local/bin/run-test {test-name} {validator-name} {validator-version}
 
@@ -42,18 +43,18 @@ For demonstrating how RPKI validators handle specific manifest numbers
       - crl-lastupdate-regression-new-fn
       - crl-lastupdate-largest-value
     Validators:
-      - fort (1.5.3, 1.5.4, 1.6.1)
+      - fort (1.5.3, 1.5.4, 1.6.4)
       - octorpki (1.4.3, 1.4.4, 1.5.10)
       - ripe-validator (2.24)
       - ripe-validator-3 (3.2-2021.04.07.12.55)
-      - routinator (0.11.0, 0.12.0, 0.13.2, main)
-      - rpki-client (7.0, 8.7, 9.0)
+      - routinator (0.11.0, 0.12.0, 0.14.0, main)
+      - rpki-client (7.0, 8.7, 9.3)
 
     The string 'all' can also be used for each option,
     to test multiple versions of a validator, or multiple
     validators, or multiple tests.
-    # run-test manifest-number-regression rpki-client 9.0
-    manifest-number-regression (rpki-client v9.0)
+    # run-test manifest-number-regression rpki-client 9.3
+    manifest-number-regression (rpki-client v9.3)
     writing RSA key
     TAL path: /data/repo/56DC0E8346EE557E329FA89D6D34D01FA403F16D.tal
     TAL path written to /last-tal-path
@@ -76,7 +77,7 @@ so:
     writing RSA key
     TAL path: /data/repo/005995B51ECFB445FDF5A3038A7472F5CD48BE6C.tal
     TAL path written to /last-tal-path
-    # init-validator /tmp/test last-tal-path rpki-client 9.0
+    # init-validator /tmp/test last-tal-path rpki-client 9.3
     # run-validator /tmp/test
     # reissue-crl-and-mft --name ta --mft-number 3
     # run-validator /tmp/test
@@ -94,11 +95,11 @@ running all tests for all validators.
 
  - manifest-number-reuse
  - manifest-number-regression
-    - Routinator >= r385e74d and rpki-client >= 8.7 report errors for
+    - Routinator >= 0.14.0 and rpki-client >= 8.7 report errors for
       these problems, while the other validators do not.
  - manifest-number-reuse-new-fn
  - manifest-number-regression-new-fn
-    - Routinator >= r385e74d and rpki-client >= 8.7 reset (in effect)
+    - Routinator >= 0.14.0 and rpki-client >= 8.7 reset (in effect)
       the locally-stored manifest number for the CA when the manifest
       filename changes.
  - manifest-number-largest-value-159
@@ -121,13 +122,13 @@ running all tests for all validators.
       value.
  - manifest-thisupdate-reuse
  - manifest-thisupdate-regression
-    - rpki-client >= 9.0 reports errors for these problems, while the
-      other validators do not.
+    - Routinator >= 0.14.0 and rpki-client >= 9.0 report errors for
+      these problems, while the other validators do not.
  - manifest-thisupdate-reuse-new-fn
  - manifest-thisupdate-regression-new-fn
-    - rpki-client >= 9.0 reset (in effect) the locally-stored
-      this-update value for the CA when the manifest filename changes.
-    - FORT reports errors on changing the filename.
+    - Routinator >= 0.14.0 and rpki-client >= 9.0 reset (in effect)
+      the locally-stored this-update value for the CA when the
+      manifest filename changes.
  - manifest-thisupdate-largest-value
     - FORT does not appear to support this value, but reverting to an
       earlier value will yield a successful validation result.
