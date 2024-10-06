@@ -6,13 +6,13 @@ use strict;
 use File::Temp qw(tempdir);
 use APNIC::RPKI::CA;
 
-use Test::More tests => 4;
+use Test::More tests => 8;
 
 {
     my $stg_repo = tempdir();
     my $repo     = tempdir();
     my $hostname = 'localhost';
-    
+
     my $ta_dirname      = APNIC::RPKI::CA::make_random_string();
     my $ta_path         = tempdir();
     my $ta_name         = 'test-ta';
@@ -49,7 +49,7 @@ use Test::More tests => 4;
                              \@ca_as_resources);
     $ca->install_ca_certificate($response, $url);
 
-    $ca->issue_roa("1.0.0.0/16", 70000); 
+    $ca->issue_roa("1.0.0.0/16", 70000);
     $ca->publish();
 
     my @files = `ls $repo/$ca_dirname`;
@@ -57,6 +57,18 @@ use Test::More tests => 4;
     my @crls = grep { /\.crl$/ } @files;
     my @mfts = grep { /\.mft$/ } @files;
     my @roas = grep { /\.roa$/ } @files;
+    is(@crls, 1, 'One CRL in repository');
+    is(@mfts, 1, 'One manifest in repository');
+    is(@roas, 1, 'One ROA in repository');
+
+    $ca->issue_roa("1.0.0.0/24", 70000);
+    $ca->publish();
+
+    @files = `ls $repo/$ca_dirname`;
+    is(@files, 3, 'Three files in repository');
+    @crls = grep { /\.crl$/ } @files;
+    @mfts = grep { /\.mft$/ } @files;
+    @roas = grep { /\.roa$/ } @files;
     is(@crls, 1, 'One CRL in repository');
     is(@mfts, 1, 'One manifest in repository');
     is(@roas, 1, 'One ROA in repository');

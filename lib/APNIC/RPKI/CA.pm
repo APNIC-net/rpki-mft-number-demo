@@ -5,18 +5,19 @@ use strict;
 
 use DateTime;
 use DateTime::Format::Strptime;
+use Digest::SHA qw(sha256_hex);
 use File::Slurp qw(read_file
                    write_file);
 use File::Temp qw(tempdir);
 use HTTP::Daemon;
 use HTTP::Status qw(:constants);
-use MIME::Base64;
 use Net::IP;
 use LWP::UserAgent;
 use Storable;
 use XML::LibXML;
 use YAML;
-use MIME::Base64 qw(encode_base64url);
+use MIME::Base64 qw(encode_base64url
+                    encode_base64);
 
 use APNIC::RPKI::Manifest;
 use APNIC::RPKI::OpenSSL;
@@ -269,8 +270,12 @@ sub initialise
     my $sia = ID_SIA_REPO().";URI:rsync://$host_and_port/repo/$repo_dirname/";
     my $mft_sia = ID_SIA_MANIFEST().";URI:rsync://$host_and_port/repo/$repo_dirname/$gski.mft";
     my $rrdp_sia = "";
+    my $rrdp_session_id = "";
+    $rrdp_dirname ||= "";
     if ($rrdp_dir) {
         $rrdp_sia = ID_SIA_RRDP().";URI:https://$rrdp_host_and_port/$rrdp_dirname/notify.xml";
+        ($rrdp_session_id) = `uuidgen`;
+        chomp $rrdp_session_id;
     }
 
     my $tal_path = "$repo_dir/$gski.tal";
@@ -284,7 +289,7 @@ sub initialise
                 "-x509 -key ca/ca/private/ca.key -out ca/ca.crt -subj '/CN=$common_name'");
         _system("$openssl x509 -in ca/ca.crt -outform DER -out ca/ca.der.cer");
         _system("cp ca/ca.der.cer $repo_dir/$gski.cer");
-        
+
         my $ft = File::Temp->new();
         my $fn = $ft->filename();
         my @key_data = `$openssl x509 -in ca/ca.crt -noout -pubkey`;
@@ -325,6 +330,9 @@ EOF
         rrdp_dirname    => $rrdp_dirname,
         rrdp_host       => $rrdp_host,
         rrdp_port       => $rrdp_port,
+        rrdp_session_id => $rrdp_session_id,
+        rrdp_serial     => 0,
+        rrdp_base       => "https://$rrdp_host_and_port/$rrdp_dirname",
     };
     YAML::DumpFile('config.yml', $own_config);
 
@@ -734,7 +742,7 @@ sub issue_crl
     } else {
         $crl_last_update = DateTime->now(time_zone => 'UTC');
     }
-    
+
     my $crl_next_update;
     if ($crl_next_update_arg) {
         $crl_next_update = $strp->parse_datetime($crl_next_update_arg);
@@ -874,6 +882,29 @@ sub publish_file
     return 1;
 }
 
+sub dir_to_rrdp_data
+{
+    my ($rrdp_base, $dir) = @_;
+
+    my @files = map { chomp; s/.*\//\//; $_ } `ls $dir`;
+    my %data;
+    for my $file (@files) {
+        my $path    = "$dir/$file";
+        my $content = read_file($path);
+        my $b64e    = encode_base64($content);
+        my $hash    = sha256_hex($content);
+
+        my $uri  = "$rrdp_base/$file";
+        $data{$file} = {
+            file => $file,
+            uri  => $uri,
+            b64e => $b64e,
+            hash => $hash,
+        };
+    }
+    return \%data;
+}
+
 sub publish
 {
     my ($self, $mft_number, $mft_filename,
@@ -890,9 +921,107 @@ sub publish
     my $own_config = YAML::LoadFile('config.yml');
     my $stg_repo = $own_config->{'stg_repo'};
 
-    my $aia = $own_config->{'aia'};
+    my $aia  = $own_config->{'aia'};
     my $gski = $own_config->{'gski'};
     my $repo = $own_config->{'repo'};
+
+    my $rrdp_dir = $own_config->{'rrdp_dir'};
+    if ($rrdp_dir) {
+        my $rrdp_dirname = $own_config->{'rrdp_dirname'};
+        my $rrdp_base_dir = "$rrdp_dir/$rrdp_dirname";
+        system("mkdir -p $rrdp_base_dir");
+        my $session_id = $own_config->{'rrdp_session_id'};
+        $own_config->{'rrdp_serial'}++;
+        my $serial = $own_config->{'rrdp_serial'};
+        my $rrdp_base = $own_config->{'rrdp_base'};
+
+        my %current_data = %{dir_to_rrdp_data($rrdp_base, $repo)};
+        my %staging_data = %{dir_to_rrdp_data($rrdp_base, $stg_repo)};
+
+        my @delta_data;
+        if ($serial > 1) {
+            for my $cd_entry (values %current_data) {
+                my $file = $cd_entry->{'file'};
+                my $sd_entry = $staging_data{$file};
+                if (not $sd_entry) {
+                    my $uri  = $cd_entry->{'uri'};
+                    my $hash = $cd_entry->{'hash'};
+                    push @delta_data,
+                         "<withdraw uri=\"$uri\" ".
+                            "hash=\"$hash\" />";
+                } else {
+                    my $uri     = $cd_entry->{'uri'};
+                    my $b64e    = $cd_entry->{'b64e'};
+                    my $sd_hash = $sd_entry->{'hash'};
+                    push @delta_data,
+                         "<publish uri=\"$uri\" ".
+                            "hash=\"$sd_hash\">$b64e</publish>";
+                }
+            }
+            for my $sd_entry (values %staging_data) {
+                my $file = $sd_entry->{'file'};
+                my $cd_entry = $current_data{$file};
+                if (not $sd_entry) {
+                    my $uri  = $sd_entry->{'uri'};
+                    my $b64e = $sd_entry->{'b64e'};
+                    my $hash = $sd_entry->{'hash'};
+                    push @delta_data,
+                         "<publish uri=\"$uri\" ".
+                            "hash=\"$hash\">$b64e</publish>";
+                }
+            }
+            if (not @delta_data) {
+                goto post_rrdp;
+            }
+            my $delta_content = <<EOF;
+                <delta version="1"
+                       session_id="$session_id"
+                       serial="$serial"
+                       xmlns="http://www.ripe.net/rpki/rrdp">
+                    @delta_data
+                </delta>
+EOF
+            write_file("$rrdp_base_dir/$serial.xml", $delta_content);
+        }
+
+        my @ss_publishes =
+            map { my $uri = $_->{'uri'};
+                  my $b64e = $_->{'b64e'};
+                  "<publish uri=\"$uri\">\n$b64e\n</publish>\n" }
+                values %staging_data;
+        my $ss_content = <<EOF;
+            <snapshot version="1"
+                      session_id="$session_id"
+                      serial="$serial"
+                      xmlns="http://www.ripe.net/rpki/rrdp">
+                @ss_publishes
+            </snapshot>
+EOF
+        write_file("$rrdp_base_dir/snapshot.xml", $ss_content);
+
+        my @nds =
+            map { my $d = $_;
+                  my $data = read_file("$rrdp_base_dir/$d.xml");
+                  my $h = sha256_hex($data);
+                  "<delta serial=\"$d\" uri=\"$rrdp_base/$d.xml\" ".
+                         "hash=\"$h\" />\n" }
+                (reverse(2..$serial));
+
+        my $ss_hash = sha256_hex($ss_content);
+        my $notification_content = <<EOF;
+            <notification version="1"
+                          session_id="$session_id"
+                          serial="$serial"
+                          xmlns="http://www.ripe.net/rpki/rrdp">
+                <snapshot uri="$rrdp_base/snapshot.xml"
+                          hash="$ss_hash" />
+                @nds
+            </notification>
+EOF
+        write_file("$rrdp_base_dir/notification.xml",
+                   $notification_content);
+    }
+    post_rrdp:
 
     my $res = system("rm -f $repo/*");
     if ($res != 0) {
@@ -906,6 +1035,8 @@ sub publish
     if ($res != 0) {
         die "Unable to clear current staging repository state";
     }
+
+    YAML::DumpFile('config.yml', $own_config);
 
     return 1;
 }
