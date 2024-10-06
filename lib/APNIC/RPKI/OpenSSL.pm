@@ -7,6 +7,7 @@ use File::Slurp qw(read_file);
 use File::Temp;
 use Net::CIDR::Set;
 use Set::IntSpan;
+use MIME::Base64 qw(encode_base64url);
 
 use APNIC::RPKI::Utils qw(system_ad);
 
@@ -74,9 +75,10 @@ sub get_key_ski
     my ($ski) = `$openssl rsa -in $fn_key -pubout | openssl asn1parse -strparse 19 -noout -out - | openssl dgst -c -sha1`;
     $ski =~ s/.* //;
     $ski =~ s/://g;
-    $ski = uc $ski;
-    chomp $ski;
-    return $ski;
+    my $enc = encode_base64url(pack('H*', $ski));
+    $enc =~ s/=*$//;
+
+    return $enc;
 }
 
 sub get_ski

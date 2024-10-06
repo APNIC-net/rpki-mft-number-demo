@@ -252,7 +252,8 @@ sub encode
             address => _encode_prefix($prefix)
         );
 
-        if (defined $max_length) {
+        my $length = Net::IP::XS->new($prefix)->prefixlen();
+        if (defined $max_length and ($max_length != $length)) {
             $data{maxLength} = $max_length;
         }
 

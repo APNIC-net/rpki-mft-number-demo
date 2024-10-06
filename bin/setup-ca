@@ -15,6 +15,8 @@ sub usage
 Usage:
 $0 --name {ca-name} --resources {IPv4/IPv6/ASN resources}
     [--parent-name {ca-name}]
+    [--repo-dirname {repo-dirname}]
+    [--hostname {hostname}]
 
 Set up a new CA.  If no parent name is provided, this will be a root
 CA.
@@ -24,7 +26,8 @@ EOF
 }
 
 my %options;
-GetOptions(\%options, 'name=s', 'resources=s', 'parent-name=s');
+GetOptions(\%options, 'name=s', 'resources=s', 'parent-name=s',
+           'repo-dirname=s', 'hostname=s');
 if (not $options{'name'}) {
     print "Please enter a name.\n";
     usage();
@@ -34,8 +37,15 @@ if (not $options{'resources'}) {
     usage();
 }
 
-my ($name, $resources, $parent_name) =
-    @options{qw(name resources parent-name)};
+my ($name, $resources, $parent_name, $repo_dirname, $hostname) =
+    @options{qw(name resources parent-name repo-dirname hostname)};
+
+if (not $repo_dirname) {
+    $repo_dirname = $name;
+}
+if (not $hostname) {
+    $hostname = "localhost";
+}
 
 my @resource_parts = split /,/, $resources;
 my @ip_resources = grep { /\./ or /:/ } @resource_parts;
@@ -51,7 +61,8 @@ my $stg_repo = $cwd."/data/stg-repo";
 my $repo = $cwd."/data/repo";
 my $tal_path =
     $ca->initialise($name, (defined $parent_name),
-                    $stg_repo, $repo, "localhost", 873,
+                    $stg_repo, $repo, $repo_dirname,
+                    $hostname, 873,
                     \@ip_resources, \@as_resources);
 
 if (defined $parent_name) {

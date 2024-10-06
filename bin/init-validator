@@ -66,9 +66,16 @@ if ($validator eq 'routinator') {
     if (not -e $exec) {
         die "Validator version number is invalid.";
     }
+    my @vord = split /\./, $version;
+    my $gt_9 = ($vord[0] > 9);
     write_file("run-validator-link",
-               "#!/bin/sh\n$exec ".
-               "-c -t tals/tal.tal -d cache output >/dev/null;\n".
+               "#!/bin/sh\n".
+               # rpki-client > 9 validates the TA certificate, but
+               # requires that not-before be less than the current
+               # time, so sleep for one second here to ensure that the
+               # not-before time has been reached.
+               ($gt_9 ? "sleep 1;\n" : "").
+               "$exec -c -t tals/tal.tal -d cache output >/dev/null;\n".
                "cat output/csv | cut -d, -f1-3 | grep -v 'Max Length' > roas-common;\n");
 } elsif ($validator eq 'fort') {
     mkdir "cache";
@@ -91,6 +98,7 @@ if ($validator eq 'routinator') {
     }
     # Have to download the TA certificate separately, for some reason.
     system("mkdir -p cache/localhost/repo");
+    system("mkdir -p cache/rpki.example.net/repo");
     my ($ta_path) = read_file("tals/tal.tal");
     chomp $ta_path;
     my $target = $ta_path;
@@ -156,7 +164,7 @@ if ($validator eq 'routinator') {
         }
     }
     push @new_config,
-         "rpki.validator.validated.objects.uri=http://localhost:$port/api/objects/validated";
+         "rpki.validator.validated.objects.uri=http://rpki.example.net:$port/api/objects/validated";
     push @new_config,
         "rpki.validator.rsync-only=true";
     for (@new_config) {
@@ -174,7 +182,7 @@ if ($validator eq 'routinator') {
                "java -Dspring.config.location=classpath:/application.properties,file:./deb.properties ".
                "-jar $exec >myout 2>&1 &\n".
                "sleep 10;\n".
-               "curl http://localhost:$port/api/objects/validated > validated;\n".
+               "curl http://rpki.example.net:$port/api/objects/validated > validated;\n".
                "killall -9 java;\n".
                "cat myout ".
                "| grep -e 'Tree validation succeeded' ".

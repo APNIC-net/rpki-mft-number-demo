@@ -77,6 +77,14 @@ RUN wget https://ftp.openbsd.org/pub/OpenBSD/rpki-client/rpki-client-9.0.tar.gz 
     && make \
     && make install \
     && cd ..
+RUN mkdir /opt/rpki-client-9.3
+RUN wget https://ftp.openbsd.org/pub/OpenBSD/rpki-client/rpki-client-9.3.tar.gz \
+    && tar xf rpki-client-9.3.tar.gz \
+    && cd rpki-client-9.3 \
+    && ./configure --with-user=rpki-client --prefix=/opt/rpki-client-9.3 \
+    && make \
+    && make install \
+    && cd ..
 RUN git clone https://github.com/kristapsdz/openrsync.git \
     && cd openrsync \
     && ./configure \
@@ -84,6 +92,14 @@ RUN git clone https://github.com/kristapsdz/openrsync.git \
     && make install \
     && cd ..
 
+RUN mkdir /opt/fort-1.6.4
+RUN wget https://github.com/NICMx/FORT-validator/releases/download/1.6.4/fort-1.6.4.tar.gz \
+    && tar xf fort-1.6.4.tar.gz \
+    && cd fort-1.6.4 \
+    && ./configure --prefix=/opt/fort-1.6.4 \
+    && make \
+    && make install \
+    && cd ..
 RUN mkdir /opt/fort-1.6.1
 RUN wget https://github.com/NICMx/FORT-validator/releases/download/1.6.1/fort-1.6.1.tar.gz \
     && tar xf fort-1.6.1.tar.gz \
@@ -112,8 +128,22 @@ RUN wget https://github.com/NICMx/FORT-validator/releases/download/1.5.3/fort-1.
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 RUN echo 'source root/.cargo/env' >> root/.bashrc
 ENV PATH="/root/.cargo/bin:${PATH}"
-RUN mkdir /opt/routinator-0.13.2
-RUN cargo install --locked --force routinator --root /opt/routinator-0.13.2 --version 0.13.2
+RUN mkdir /opt/routinator-0.14.0
+RUN cargo install --locked --force routinator --root /opt/routinator-0.14.0 --version 0.14.0
+# Doesn't build, so disabling for now.
+#
+# error[E0282]: type annotations needed for `Box<_>`
+#   --> /root/.cargo/registry/src/index.crates.io-6f17d22bba15001f/time-0.3.31/src/format_description/parse/mod.rs:83:9
+#    |
+# 83 |     let items = format_items
+#    |         ^^^^^
+# ...
+# 86 |     Ok(items.into())
+#    |              ---- type must be known at this point
+#    |
+#    = note: this is an inference error on crate `time` caused by an API change in Rust 1.80.0; update `time` to version `>=0.3.35` by calling `cargo update`
+# RUN mkdir /opt/routinator-0.13.2
+# RUN cargo install --locked --force routinator --root /opt/routinator-0.13.2 --version 0.13.2
 RUN mkdir /opt/routinator-0.12.0
 RUN cargo install --locked --force routinator --root /opt/routinator-0.12.0 --version 0.12.0
 RUN mkdir /opt/routinator-0.11.0
@@ -138,7 +168,7 @@ RUN chmod 755 /opt/octorpki-1.4.3/bin/octorpki
 RUN wget https://github.com/RIPE-NCC/rpki-validator-3/archive/refs/tags/3.2-2021.04.07.12.55.tar.gz
 RUN apt-get install -y unzip zip rpm
 
-SHELL ["/bin/bash", "-c"] 
+SHELL ["/bin/bash", "-c"]
 RUN curl -s "https://get.sdkman.io" | bash
 RUN mkdir -p /opt/ripe-validator-3/3.2-2021.04.07.12.55
 RUN source "/root/.sdkman/bin/sdkman-init.sh" \
@@ -163,10 +193,15 @@ RUN tar xf rpki-validator-2.24.tar.gz \
     && sdk use maven 3.9.6 \
     && mvn install -Dmaven.test.skip=true
 
-RUN apt-get install -y libdatetime-format-strptime-perl
-RUN apt-get install -y libnet-ip-xs-perl
-RUN apt-get install -y jq libjson-xs-perl
-RUN apt-get install -y net-tools psmisc
+RUN apt-get update -y
+RUN apt-get install -y \
+    libdatetime-format-strptime-perl \
+    libnet-ip-xs-perl \
+    jq \
+    libjson-xs-perl \
+    net-tools \
+    psmisc \
+    uuid-runtime
 
 RUN echo 'source /root/.sdkman/bin/sdkman-init.sh' >> root/.bashrc
 COPY . /root/rpki-mft-number-demo

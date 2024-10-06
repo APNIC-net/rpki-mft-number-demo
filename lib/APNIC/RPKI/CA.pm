@@ -200,7 +200,7 @@ sub _generate_config
 sub initialise
 {
     my ($self, $common_name, $key_only, $stg_repo_dir, $repo_dir,
-        $host, $port, $ip_resources, $as_resources) = @_;
+        $repo_dirname, $host, $port, $ip_resources, $as_resources) = @_;
 
     if (not defined $port) {
         $port = 873;
@@ -236,15 +236,19 @@ sub initialise
     _system("$openssl genrsa -out ca/ca/private/ca.key 2048 >/dev/null 2>&1");
     my $key_data = read_file("ca/ca/private/ca.key");
     my $gski = $self->{'openssl'}->get_key_ski($key_data);
+    # Leading hyphens can cause problems with command line calls.
+    if ($gski =~ /^-/) {
+        $gski = "Z".$gski;
+    }
 
-    my $stg_repo = $stg_repo_dir.'/'.$name;
+    my $stg_repo = $stg_repo_dir.'/'.$repo_dirname;
     mkdir $stg_repo or die $!;
-    my $repo = $repo_dir.'/'.$name;
+    my $repo = $repo_dir.'/'.$repo_dirname;
     mkdir $repo or die $!;
 
     my $aia = undef;
-    my $sia = ID_SIA_REPO().";URI:rsync://$host_and_port/repo/$name/";
-    my $mft_sia = ID_SIA_MANIFEST().";URI:rsync://$host_and_port/repo/$name/$gski.mft";
+    my $sia = ID_SIA_REPO().";URI:rsync://$host_and_port/repo/$repo_dirname/";
+    my $mft_sia = ID_SIA_MANIFEST().";URI:rsync://$host_and_port/repo/$repo_dirname/$gski.mft";
 
     my $tal_path = "$repo_dir/$gski.tal";
 
@@ -278,6 +282,7 @@ EOF
         host            => $host,
         port            => $port,
         host_and_port   => $host_and_port,
+        repo_dirname    => $repo_dirname,
         stg_repo        => $stg_repo,
         repo            => $repo,
         self_signed     => (not $key_only),
@@ -306,13 +311,14 @@ sub update_mft_filename
     $own_config->{'mft_filename'} = $mft_filename;
     my $host_and_port = $own_config->{'host_and_port'};
     my $name = $own_config->{'name'};
-    my $mft_sia = ID_SIA_MANIFEST().";URI:rsync://$host_and_port/repo/$name/$mft_filename";
+    my $repo_dirname = $own_config->{'repo_dirname'};
+    my $mft_sia = ID_SIA_MANIFEST().";URI:rsync://$host_and_port/repo/$repo_dirname/$mft_filename";
     $own_config->{'mft_sia'} = $mft_sia;
 
     my $ip_resources = $own_config->{'ip_resources'};
     my $as_resources = $own_config->{'as_resources'};
     my $extra = $self->_generate_sbgp_config($ip_resources, $as_resources);
-    my $sia = ID_SIA_REPO().";URI:rsync://$host_and_port/repo/$name/";
+    my $sia = ID_SIA_REPO().";URI:rsync://$host_and_port/repo/$repo_dirname/";
     $extra = "subjectInfoAccess=$sia,$mft_sia\n$extra";
     $self->_generate_config(root_ca_ext_extra => $extra);
 
@@ -470,6 +476,7 @@ sub sign_ca_request
     my $gski = $own_config->{'gski'};
     my $crl_filename = $own_config->{'crl_filename'};
     my $host_and_port = $own_config->{'host_and_port'};
+    my $repo_dirname = $own_config->{'repo_dirname'};
     my $stg_repo = $own_config->{'stg_repo'};
 
     my $path = $self->{'ca_path'};
@@ -479,7 +486,7 @@ sub sign_ca_request
         $extra = 'authorityInfoAccess=caIssuers;URI:'.
                  "$aia\n".
                  'crlDistributionPoints=URI:'.
-                 "rsync://$host_and_port/repo/$name/$crl_filename\n".
+                 "rsync://$host_and_port/repo/$repo_dirname/$crl_filename\n".
                  'subjectInfoAccess='.$own_config->{'sia'}.','.
                                       $own_config->{'mft_sia'}."\n".
                   $extra;
@@ -503,7 +510,7 @@ sub sign_ca_request
             "-out $stg_repo/$cert_gski.cer");
     $self->publish();
 
-    return ($data, "rsync://$host_and_port/repo/$name/$cert_gski.cer");
+    return ($data, "rsync://$host_and_port/repo/$repo_dirname/$cert_gski.cer");
 }
 
 sub install_ca_certificate
@@ -526,12 +533,13 @@ sub install_ca_certificate
     $own_config->{'aia'} = $aia;
     $own_config->{'gski'} = $gski;
     my $host_and_port = $own_config->{'host_and_port'};
+    my $repo_dirname = $own_config->{'repo_dirname'};
 
     my $path = $self->{'ca_path'};
     my ($name) = ($path =~ /.*\/(.*)\/?/);
 
     $own_config->{'mft_sia'} =
-        ID_SIA_MANIFEST().";URI:rsync://$host_and_port/repo/$name/$gski.mft";
+        ID_SIA_MANIFEST().";URI:rsync://$host_and_port/repo/$repo_dirname/$gski.mft";
 
     YAML::DumpFile('config.yml', $own_config);
 
@@ -553,6 +561,19 @@ sub revoke_current_ee_certificate
     return 1;
 }
 
+sub issue_new_ee_key
+{
+    my ($self) = @_;
+
+    $self->_chdir_ca();
+
+    my $openssl = $self->{'openssl'}->get_openssl_path();
+    _system("$openssl genrsa ".
+            "-out ".EE_KEY_FILENAME()." 2048");
+
+    return 1;
+}
+
 sub issue_new_ee_certificate
 {
     my ($self, $ip_resources, $as_resources, @sias) = @_;
@@ -564,6 +585,7 @@ sub issue_new_ee_certificate
     my $gski = $own_config->{'gski'};
     my $crl_filename = $own_config->{'crl_filename'};
     my $host_and_port = $own_config->{'host_and_port'};
+    my $repo_dirname = $own_config->{'repo_dirname'};
 
     my $extra = $self->_generate_sbgp_config($ip_resources, $as_resources);
     my $path = $self->{'ca_path'};
@@ -571,20 +593,20 @@ sub issue_new_ee_certificate
     $extra = 'authorityInfoAccess=caIssuers;URI:'.
              "$aia\n".
              'crlDistributionPoints=URI:'.
-             "rsync://$host_and_port/repo/$name/$crl_filename\n".
+             "rsync://$host_and_port/repo/$repo_dirname/$crl_filename\n".
              (@sias ? 'subjectInfoAccess='.(join ',', @sias)."\n" : '').
              $extra;
 
     $self->_generate_config(signing_ca_ext_extra => $extra);
 
     my $openssl = $self->{'openssl'}->get_openssl_path();
-    _system("$openssl genrsa ".
-            "-out ".EE_KEY_FILENAME()." 2048");
+    my ($cn) = `uuidgen`;
+    chomp $cn;
     _system("$openssl req -new ".
             "-config ca.cnf -extensions root_ca_ext ".
             "-key ".EE_KEY_FILENAME()." ".
             "-out ".EE_CSR_FILENAME()." ".
-            "-subj '/CN=EE'");
+            "-subj '/CN=$cn'");
     _system("$openssl ca -batch -config ca.cnf ".
             "-out ".EE_CERT_FILENAME()." ".
             "-extensions signing_ca_ext ".
@@ -624,9 +646,17 @@ sub issue_roa
     $roa->as_id($asn);
 
     my $host_and_port = $own_config->{'host_and_port'};
+    my $repo_dirname = $own_config->{'repo_dirname'};
     my $name = $own_config->{'name'};
-    my $roa_filename = make_random_string().'.roa';
-    my $sia = ID_SIA_SIGNEDOBJECT().";URI:rsync://$host_and_port/repo/$name/$roa_filename";
+    $self->issue_new_ee_key();
+    my $key_data = read_file(EE_KEY_FILENAME());
+    my $gski = $self->{'openssl'}->get_key_ski($key_data);
+    # Leading hyphens can cause problems with command line calls.
+    if ($gski =~ /^-/) {
+        $gski = "Z".$gski;
+    }
+    my $roa_filename = "$gski.roa";
+    my $sia = ID_SIA_SIGNEDOBJECT().";URI:rsync://$host_and_port/repo/$repo_dirname/$roa_filename";
 
     my @ip_resources_list = keys %ip_resources;
     $self->issue_new_ee_certificate(\@ip_resources_list, [], $sia);
@@ -735,6 +765,7 @@ sub issue_manifest
 
     my $sia = $own_config->{'mft_sia'};
     $sia =~ s/\.10;/.11;/;
+    $self->issue_new_ee_key();
     $self->issue_new_ee_certificate(undef, undef, $sia);
     my $aia = $own_config->{'aia'};
 
