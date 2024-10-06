@@ -273,7 +273,7 @@ sub initialise
     my $rrdp_session_id = "";
     $rrdp_dirname ||= "";
     if ($rrdp_dir) {
-        $rrdp_sia = ID_SIA_RRDP().";URI:https://$rrdp_host_and_port/$rrdp_dirname/notify.xml";
+        $rrdp_sia = ID_SIA_RRDP().";URI:https://$rrdp_host_and_port/$rrdp_dirname/notification.xml";
         ($rrdp_session_id) = `uuidgen`;
         chomp $rrdp_session_id;
     }
@@ -282,7 +282,9 @@ sub initialise
 
     if (not $key_only) {
         my $extra = $self->_generate_sbgp_config($ip_resources, $as_resources);
-        $extra = "subjectInfoAccess=$sia,$mft_sia\n$extra";
+        $extra = "subjectInfoAccess=$sia,$mft_sia".
+                 ($rrdp_sia ? ",$rrdp_sia" : "")."\n".
+                 $extra;
         $self->_generate_config(root_ca_ext_extra => $extra);
 
         _system("$openssl req -new -config ca.cnf -extensions root_ca_ext ".
@@ -332,6 +334,7 @@ EOF
         rrdp_port       => $rrdp_port,
         rrdp_session_id => $rrdp_session_id,
         rrdp_serial     => 0,
+        rsync_base      => "rsync://$host_and_port/repo/$repo_dirname",
         rrdp_base       => "https://$rrdp_host_and_port/$rrdp_dirname",
     };
     YAML::DumpFile('config.yml', $own_config);
@@ -884,7 +887,7 @@ sub publish_file
 
 sub dir_to_rrdp_data
 {
-    my ($rrdp_base, $dir) = @_;
+    my ($rsync_base, $dir) = @_;
 
     my @files = map { chomp; s/.*\//\//; $_ } `ls $dir`;
     my %data;
@@ -894,7 +897,7 @@ sub dir_to_rrdp_data
         my $b64e    = encode_base64($content);
         my $hash    = sha256_hex($content);
 
-        my $uri  = "$rrdp_base/$file";
+        my $uri  = "$rsync_base/$file";
         $data{$file} = {
             file => $file,
             uri  => $uri,
@@ -934,9 +937,10 @@ sub publish
         $own_config->{'rrdp_serial'}++;
         my $serial = $own_config->{'rrdp_serial'};
         my $rrdp_base = $own_config->{'rrdp_base'};
+        my $rsync_base = $own_config->{'rsync_base'};
 
-        my %current_data = %{dir_to_rrdp_data($rrdp_base, $repo)};
-        my %staging_data = %{dir_to_rrdp_data($rrdp_base, $stg_repo)};
+        my %current_data = %{dir_to_rrdp_data($rsync_base, $repo)};
+        my %staging_data = %{dir_to_rrdp_data($rsync_base, $stg_repo)};
 
         my @delta_data;
         if ($serial > 1) {
@@ -950,24 +954,22 @@ sub publish
                          "<withdraw uri=\"$uri\" ".
                             "hash=\"$hash\" />";
                 } else {
-                    my $uri     = $cd_entry->{'uri'};
-                    my $b64e    = $cd_entry->{'b64e'};
-                    my $sd_hash = $sd_entry->{'hash'};
+                    my $uri     = $sd_entry->{'uri'};
+                    my $b64e    = $sd_entry->{'b64e'};
+                    my $cd_hash = $cd_entry->{'hash'};
                     push @delta_data,
                          "<publish uri=\"$uri\" ".
-                            "hash=\"$sd_hash\">$b64e</publish>";
+                            "hash=\"$cd_hash\">$b64e</publish>";
                 }
             }
             for my $sd_entry (values %staging_data) {
                 my $file = $sd_entry->{'file'};
                 my $cd_entry = $current_data{$file};
-                if (not $sd_entry) {
+                if (not $cd_entry) {
                     my $uri  = $sd_entry->{'uri'};
                     my $b64e = $sd_entry->{'b64e'};
-                    my $hash = $sd_entry->{'hash'};
                     push @delta_data,
-                         "<publish uri=\"$uri\" ".
-                            "hash=\"$hash\">$b64e</publish>";
+                         "<publish uri=\"$uri\">$b64e</publish>";
                 }
             }
             if (not @delta_data) {

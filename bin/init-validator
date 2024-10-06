@@ -7,7 +7,7 @@ use Cwd qw(cwd);
 use autodie qw(:all);
 use File::Slurp qw(read_file write_file);
 
-my ($state_dir, $tal_path, $validator, $version) = @ARGV;
+my ($state_dir, $tal_path, $validator, $version, $rsync_only) = @ARGV;
 
 my $cwd = cwd();
 if ($tal_path !~ /^\//) {
@@ -38,6 +38,7 @@ if ($validator eq 'routinator') {
                    "#!/bin/sh\n".
                    "rm -f log;\n".
                    "$exec ".
+                   ($rsync_only ? "--disable-rrdp " : "").
                    "-r . ".
                    "-t tals ".
                    "--allow-dubious-hosts ".
@@ -50,6 +51,7 @@ if ($validator eq 'routinator') {
                    "#!/bin/sh\n".
                    "rm -f log;\n".
                    "$exec ".
+                   ($rsync_only ? "--disable-rrdp " : "").
                    "-r . ".
                    "--no-rir-tals ".
                    "--extra-tals-dir tals ".
@@ -75,7 +77,9 @@ if ($validator eq 'routinator') {
                # time, so sleep for one second here to ensure that the
                # not-before time has been reached.
                ($gt_9 ? "sleep 1;\n" : "").
-               "$exec -c -t tals/tal.tal -d cache output >/dev/null;\n".
+               "$exec ".
+               ($rsync_only ? "-R " : "").
+               "-c -t tals/tal.tal -d cache output >/dev/null;\n".
                "cat output/csv | cut -d, -f1-3 | grep -v 'Max Length' > roas-common;\n");
 } elsif ($validator eq 'fort') {
     mkdir "cache";
@@ -85,6 +89,7 @@ if ($validator eq 'routinator') {
     }
     write_file("run-validator-link",
                "#!/bin/sh\n/opt/fort-$version/bin/fort ".
+               ($rsync_only ? "--rrdp.enabled=false " : "").
                "--tal tals ".
                "--local-repository cache ".
                "--output.roa roas ".
@@ -111,6 +116,7 @@ if ($validator eq 'routinator') {
     write_file("run-validator-link",
                "#!/bin/sh\n".
                "$exec ".
+               ($rsync_only ? "-rrdp=false " :"").
                "-allow.root ".
                "-tal.root=tals/tal.tal ".
                "-mode=oneoff ".
@@ -165,8 +171,10 @@ if ($validator eq 'routinator') {
     }
     push @new_config,
          "rpki.validator.validated.objects.uri=http://rpki.example.net:$port/api/objects/validated";
-    push @new_config,
-        "rpki.validator.rsync-only=true";
+    if ($rsync_only) {
+        push @new_config,
+            "rpki.validator.rsync-only=true";
+    }
     for (@new_config) {
         $_ .= "\n";
     }

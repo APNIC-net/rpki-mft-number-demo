@@ -203,10 +203,17 @@ RUN apt-get install -y \
     psmisc \
     uuid-runtime
 
+RUN apt-get install -y \
+    nginx \
+    mkcert
+RUN mkcert -install
+RUN mkcert -cert-file /domain.pem -key-file /key.pem rpki.example.net localhost 127.0.0.1
+
 RUN echo 'source /root/.sdkman/bin/sdkman-init.sh' >> root/.bashrc
 COPY . /root/rpki-mft-number-demo
 RUN cd /root/rpki-mft-number-demo/ && perl Makefile.PL && make && make install
 COPY rsyncd.conf /etc/
 RUN sed -i 's/RSYNC_ENABLE=false/RSYNC_ENABLE=true/' /etc/default/rsync
+RUN cp /root/rpki-mft-number-demo/nginx.conf /etc/nginx/nginx.conf
 
 RUN rm -rf /root/rpki-mft-number-demo/

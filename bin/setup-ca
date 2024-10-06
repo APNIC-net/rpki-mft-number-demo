@@ -63,7 +63,8 @@ my $tal_path =
     $ca->initialise($name, (defined $parent_name),
                     $stg_repo, $repo, $repo_dirname,
                     $hostname, 873,
-                    \@ip_resources, \@as_resources);
+                    \@ip_resources, \@as_resources,
+                    "/rrdp", $name, "localhost");
 
 if (defined $parent_name) {
     my $request = $ca->get_ca_request($name, \@ip_resources, \@as_resources);
