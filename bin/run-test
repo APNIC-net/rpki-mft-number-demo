@@ -48,6 +48,7 @@ my %test_name_to_fn = (
     'crl-lastupdate-regression'             => \&crl_lastupdate_regression,
     'crl-lastupdate-regression-new-fn'      => \&crl_lastupdate_regression_new_fn,
     'crl-lastupdate-largest-value'          => \&crl_lastupdate_largest_value,
+    'location-mismatch'                     => \&location_mismatch,
 );
 
 sub make_random_string
@@ -71,10 +72,15 @@ sub get_display_version
 
 sub issue_new_roa
 {
-    my ($name) = @_;
+    my ($name, $sia) = @_;
 
     my $asn = time();
-    system("issue-roa --name $name --asn $asn --prefixes 255.0.0.0/24");
+    my $cmd = "issue-roa --name $name ".
+              "--asn $asn --prefixes 255.0.0.0/24";
+    if ($sia) {
+        $cmd .= " --sia \"$sia\"";
+    }
+    system($cmd);
     print "Issued ROA with ASN $asn\n";
 
     return $asn;
@@ -106,7 +112,6 @@ sub manifest_thisupdate_reuse
 
     my $display_version = get_display_version($validator_version);
     print "manifest-thisupdate-reuse ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -143,7 +148,6 @@ sub manifest_thisupdate_reuse_new_fn
 
     my $display_version = get_display_version($validator_version);
     print "manifest-thisupdate-reuse-new-fn ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -188,7 +192,6 @@ sub manifest_thisupdate_regression
 
     my $display_version = get_display_version($validator_version);
     print "manifest-thisupdate-regression ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -218,7 +221,6 @@ sub manifest_thisupdate_regression_new_fn
 
     my $display_version = get_display_version($validator_version);
     print "manifest-thisupdate-regression-new-fn ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -257,7 +259,6 @@ sub manifest_thisupdate_largest_value
 
     my $display_version = get_display_version($validator_version);
     print "manifest-thisupdate-largest-value ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -312,7 +313,6 @@ sub crl_lastupdate_reuse
 
     my $display_version = get_display_version($validator_version);
     print "crl-lastupdate-reuse ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -348,7 +348,6 @@ sub crl_lastupdate_reuse_new_fn
 
     my $display_version = get_display_version($validator_version);
     print "crl-lastupdate-reuse-new-fn ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -393,7 +392,6 @@ sub crl_lastupdate_regression
 
     my $display_version = get_display_version($validator_version);
     print "crl-lastupdate-regression ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -423,7 +421,6 @@ sub crl_lastupdate_regression_new_fn
 
     my $display_version = get_display_version($validator_version);
     print "crl-lastupdate-regression-new-fn ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -456,13 +453,73 @@ sub crl_lastupdate_regression_new_fn
     print "---\n";
 }
 
+sub location_mismatch
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "location-mismatch ($validator_name $display_version)\n";
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
+
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version --rsync-only");
+    print "Initial validator run (rsync):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+
+    my $sia = "1.3.6.1.5.5.7.48.11;URI:rsync://blah.invalid";
+    my $asn1 = issue_new_roa($ta_name, $sia);
+    system("reissue-crl-and-mft --name $ta_name");
+
+    print "Validator run (SIA mismatch, rsync):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    verify_new_roa($vp, 0, $asn1);
+
+    $asn1 = issue_new_roa($ta_name);
+    system("reissue-crl-and-mft --name $ta_name");
+
+    print "Validator run (SIA mismatch fixed, rsync):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
+
+    my $validator2_dir = make_random_string();
+    my $vp2 = "/tmp/$validator2_dir";
+    system("init-validator $vp2 last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run (RRDP):\n";
+    system("run-validator $vp2");
+    print "End validator run\n";
+
+    $sia = "1.3.6.1.5.5.7.48.11;URI:rsync://blah.invalid";
+    $asn1 = issue_new_roa($ta_name, $sia);
+    system("reissue-crl-and-mft --name $ta_name");
+
+    print "Validator run (SIA mismatch, RRDP):\n";
+    system("run-validator $vp2");
+    print "End validator run\n";
+    verify_new_roa($vp2, 0, $asn1);
+
+    $asn1 = issue_new_roa($ta_name);
+    system("reissue-crl-and-mft --name $ta_name");
+
+    print "Validator run (SIA mismatch fixed, RRDP):\n";
+    system("run-validator $vp2");
+    print "End validator run\n";
+    verify_new_roa($vp2, 1, $asn1);
+    print "---\n";
+}
+
 sub crl_lastupdate_largest_value
 {
     my ($validator_name, $validator_version) = @_;
 
     my $display_version = get_display_version($validator_version);
     print "crl-lastupdate-largest-value ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -516,7 +573,6 @@ sub manifest_number_reuse
 
     my $display_version = get_display_version($validator_version);
     print "manifest-number-reuse ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -543,7 +599,6 @@ sub crl_number_reuse
 
     my $display_version = get_display_version($validator_version);
     print "crl-number-reuse ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -570,7 +625,6 @@ sub crl_number_reuse_new_fn
 
     my $display_version = get_display_version($validator_version);
     print "crl-number-reuse-new-fn ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -606,7 +660,6 @@ sub crl_number_regression
 
     my $display_version = get_display_version($validator_version);
     print "crl-number-regression ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -639,7 +692,6 @@ sub crl_number_regression_new_fn
 
     my $display_version = get_display_version($validator_version);
     print "crl-number-regression-new-fn ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -681,7 +733,6 @@ sub manifest_number_reuse_new_fn
 
     my $display_version = get_display_version($validator_version);
     print "manifest-number-reuse-new-fn ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -715,7 +766,6 @@ sub manifest_number_regression
 
     my $display_version = get_display_version($validator_version);
     print "manifest-number-regression ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -748,7 +798,6 @@ sub manifest_number_regression_new_fn
 
     my $display_version = get_display_version($validator_version);
     print "manifest-number-regression-new-fn ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -788,7 +837,6 @@ sub manifest_number_largest_value_159
 
     my $display_version = get_display_version($validator_version);
     print "manifest-number-largest-value-159 ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -813,7 +861,6 @@ sub manifest_number_too_large_159
 
     my $display_version = get_display_version($validator_version);
     print "manifest-number-too-large-159 ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -840,7 +887,6 @@ sub manifest_number_largest_value_160
 
     my $display_version = get_display_version($validator_version);
     print "manifest-number-largest-value-160 ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -865,7 +911,6 @@ sub manifest_number_too_large_160
 
     my $display_version = get_display_version($validator_version);
     print "manifest-number-too-large-160 ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -892,7 +937,6 @@ sub crl_number_largest_value_159
 
     my $display_version = get_display_version($validator_version);
     print "crl-number-largest-value-159 ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -917,7 +961,6 @@ sub crl_number_too_large_159
 
     my $display_version = get_display_version($validator_version);
     print "crl-number-too-large-159 ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -944,7 +987,6 @@ sub crl_number_largest_value_160
 
     my $display_version = get_display_version($validator_version);
     print "crl-number-largest-value-160 ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -969,7 +1011,6 @@ sub crl_number_too_large_160
 
     my $display_version = get_display_version($validator_version);
     print "crl-number-too-large-160 ($validator_name $display_version)\n";
-    system("/sbin/service rsync start >/dev/null");
     my $ta_name = make_random_string();
     system("setup-ca --name $ta_name --resources 255.0.0.0/24");
     my $validator_dir = make_random_string();
@@ -1020,6 +1061,7 @@ if (not @ARGV) {
     print "  - crl-lastupdate-regression\n";
     print "  - crl-lastupdate-regression-new-fn\n";
     print "  - crl-lastupdate-largest-value\n";
+    print "  - location-mismatch\n";
 
     print "Validators:\n";
     for my $name (sort keys %validators) {
@@ -1065,6 +1107,7 @@ if ($test_name eq 'all') {
         crl-lastupdate-regression
         crl-lastupdate-regression-new-fn
         crl-lastupdate-largest-value
+        location-mismatch
     )};
 } else {
     my $test_fn = $test_name_to_fn{$test_name};
@@ -1074,6 +1117,8 @@ if ($test_name eq 'all') {
     @test_fns = ($test_fn);
 }
 
+system("/sbin/service rsync start >/dev/null");
+system("/sbin/service nginx start >/dev/null");
 for my $test_fn (@test_fns) {
     if ($validator_name eq 'all') {
         for my $name (sort keys %validators) {

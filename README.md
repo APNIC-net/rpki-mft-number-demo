@@ -10,7 +10,6 @@ For demonstrating how RPKI validators handle specific manifest numbers
 
 ### Usage
 
---add-host rpki.example.net:127.0.0.1
     $ docker run -it --add-host rpki.example.net:127.0.0.1 apnic/rpki-mft-number-demo /bin/bash
     # run-test
     Usage: /usr/local/bin/run-test {test-name} {validator-name} {validator-version}
@@ -42,6 +41,7 @@ For demonstrating how RPKI validators handle specific manifest numbers
       - crl-lastupdate-regression
       - crl-lastupdate-regression-new-fn
       - crl-lastupdate-largest-value
+      - location-mismatch
     Validators:
       - fort (1.5.3, 1.5.4, 1.6.4)
       - octorpki (1.4.3, 1.4.4, 1.5.10)
@@ -174,6 +174,7 @@ running all tests for all validators.
       earlier value will yield a successful validation result.
     - The other validators appear to process the repository
       successfully for each test.
+ - location-mismatch
 
 (This summary excludes the RIPE validators, since they have been
 formally deprecated for many years now.)

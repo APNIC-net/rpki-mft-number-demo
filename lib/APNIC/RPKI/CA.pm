@@ -27,7 +27,8 @@ use APNIC::RPKI::Utils qw(system_ad);
 use constant CA_CONFIG_PARAMETERS => qw(dir ca
                                         root_ca_ext_extra
                                         ca_ext_extra
-                                        signing_ca_ext_extra);
+                                        signing_ca_ext_extra
+                                        copy_extensions);
 
 use constant CA_CONFIG => <<EOF;
 [ default ]
@@ -73,7 +74,7 @@ email_in_dn             = no
 preserve                = no
 name_opt                = ca_default
 cert_opt                = ca_default
-copy_extensions         = copy
+copy_extensions         = {copy_extensions}
 x509_extensions         = signing_ca_ext
 default_crl_days        = 1
 crl_extensions          = crl_ext
@@ -111,6 +112,10 @@ subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid:always
 certificatePolicies     = critical,\@pqs
 {signing_ca_ext_extra}
+
+[ ee_ext ]
+keyUsage                = critical,digitalSignature
+subjectKeyIdentifier    = hash
 
 [ crl_ext ]
 authorityKeyIdentifier  = keyid:always
@@ -187,6 +192,8 @@ sub is_initialised
 sub _generate_config
 {
     my ($self, %parameters) = @_;
+
+    $parameters{'copy_extensions'} ||= 'none';
 
     my $config = CA_CONFIG();
     my $ca_path = $self->{'ca_path'};
@@ -541,7 +548,8 @@ sub sign_ca_request
                   $extra;
     }
 
-    $self->_generate_config(root_ca_ext_extra => $extra);
+    $self->_generate_config(root_ca_ext_extra => $extra,
+                            copy_extensions   => 'copy');
 
     my $ft_output = File::Temp->new();
     my $fn_output = $ft_output->filename();
@@ -652,7 +660,7 @@ sub issue_new_ee_certificate
     my ($cn) = `uuidgen`;
     chomp $cn;
     _system("$openssl req -new ".
-            "-config ca.cnf -extensions root_ca_ext ".
+            "-config ca.cnf -extensions ee_ext ".
             "-key ".EE_KEY_FILENAME()." ".
             "-out ".EE_CSR_FILENAME()." ".
             "-subj '/CN=$cn'");
@@ -675,7 +683,7 @@ sub make_random_string
 
 sub issue_roa
 {
-    my ($self, $prefixes, $asn) = @_;
+    my ($self, $prefixes, $asn, $sia) = @_;
 
     $self->_chdir_ca();
     my $own_config = YAML::LoadFile('config.yml');
@@ -705,7 +713,11 @@ sub issue_roa
         $gski = "Z".$gski;
     }
     my $roa_filename = "$gski.roa";
-    my $sia = ID_SIA_SIGNEDOBJECT().";URI:rsync://$host_and_port/repo/$repo_dirname/$roa_filename";
+    if (not defined $sia) {
+        $sia =
+            ID_SIA_SIGNEDOBJECT().";URI:rsync://$host_and_port".
+                                  "/repo/$repo_dirname/$roa_filename";
+    }
 
     my @ip_resources_list = keys %ip_resources;
     $self->issue_new_ee_certificate(\@ip_resources_list, [], $sia);
@@ -976,12 +988,12 @@ sub publish
                 goto post_rrdp;
             }
             my $delta_content = <<EOF;
-                <delta version="1"
-                       session_id="$session_id"
-                       serial="$serial"
-                       xmlns="http://www.ripe.net/rpki/rrdp">
-                    @delta_data
-                </delta>
+<delta version="1"
+       session_id="$session_id"
+       serial="$serial"
+       xmlns="http://www.ripe.net/rpki/rrdp">
+    @delta_data
+</delta>
 EOF
             write_file("$rrdp_base_dir/$serial.xml", $delta_content);
         }
@@ -992,12 +1004,12 @@ EOF
                   "<publish uri=\"$uri\">\n$b64e\n</publish>\n" }
                 values %staging_data;
         my $ss_content = <<EOF;
-            <snapshot version="1"
-                      session_id="$session_id"
-                      serial="$serial"
-                      xmlns="http://www.ripe.net/rpki/rrdp">
-                @ss_publishes
-            </snapshot>
+<snapshot version="1"
+          session_id="$session_id"
+          serial="$serial"
+          xmlns="http://www.ripe.net/rpki/rrdp">
+    @ss_publishes
+</snapshot>
 EOF
         write_file("$rrdp_base_dir/snapshot.xml", $ss_content);
 
@@ -1011,14 +1023,14 @@ EOF
 
         my $ss_hash = sha256_hex($ss_content);
         my $notification_content = <<EOF;
-            <notification version="1"
-                          session_id="$session_id"
-                          serial="$serial"
-                          xmlns="http://www.ripe.net/rpki/rrdp">
-                <snapshot uri="$rrdp_base/snapshot.xml"
-                          hash="$ss_hash" />
-                @nds
-            </notification>
+<notification version="1"
+              session_id="$session_id"
+              serial="$serial"
+              xmlns="http://www.ripe.net/rpki/rrdp">
+    <snapshot uri="$rrdp_base/snapshot.xml"
+              hash="$ss_hash" />
+    @nds
+</notification>
 EOF
         write_file("$rrdp_base_dir/notification.xml",
                    $notification_content);

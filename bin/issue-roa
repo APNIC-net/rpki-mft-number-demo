@@ -16,6 +16,7 @@ Usage:
 $0 --name {ca-name}
    --prefixes {prefixes}
    --asn {asn}
+   --sia {sia}
 
 Issue a ROA for the given CA.
 EOF
@@ -27,7 +28,8 @@ my %options;
 GetOptions(\%options,
            'name=s',
            'prefixes=s',
-           'asn=s');
+           'asn=s',
+           'sia=s');
 if (not $options{'name'}) {
     print "Please enter a name.\n";
     usage();
@@ -41,11 +43,11 @@ if (not $options{'asn'}) {
     usage();
 }
 
-my ($name, $prefixes, $asn) =
-    @options{qw(name prefixes asn)};
+my ($name, $prefixes, $asn, $sia) =
+    @options{qw(name prefixes asn sia)};
 
 my $path = "/data/cas/$name";
 my $ca = APNIC::RPKI::CA->new(ca_path => $path);
-$ca->issue_roa($prefixes, $asn);
+$ca->issue_roa($prefixes, $asn, $sia);
 
 1;
