@@ -175,6 +175,9 @@ running all tests for all validators.
     - The other validators appear to process the repository
       successfully for each test.
  - location-mismatch
+    - Routinator and rpki-client >= 9.3 verify that the signed
+      object's SIA matches the object's rsync path.
+    - The other validators do not check this.
 
 (This summary excludes the RIPE validators, since they have been
 formally deprecated for many years now.)
