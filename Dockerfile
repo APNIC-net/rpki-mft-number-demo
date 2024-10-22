@@ -34,6 +34,7 @@ RUN apt-get install -y \
     libipc-system-simple-perl \
     autoconf \
     automake \
+    libtool \
     build-essential \
     libjansson-dev \
     pkg-config \
@@ -57,7 +58,7 @@ RUN mkdir /opt/rpki-client-7.0
 RUN wget https://ftp.openbsd.org/pub/OpenBSD/rpki-client/rpki-client-7.0.tar.gz \
     && tar xf rpki-client-7.0.tar.gz \
     && cd rpki-client-7.0 \
-    && ./configure --with-user=rpki-client --prefix=/opt/rpki-client-7.0 \
+    && ./configure --with-rsync=rsync --with-user=rpki-client --prefix=/opt/rpki-client-7.0 \
     && make \
     && make install \
     && cd ..
@@ -65,7 +66,7 @@ RUN mkdir /opt/rpki-client-8.7
 RUN wget https://ftp.openbsd.org/pub/OpenBSD/rpki-client/rpki-client-8.7.tar.gz \
     && tar xf rpki-client-8.7.tar.gz \
     && cd rpki-client-8.7 \
-    && ./configure --with-user=rpki-client --prefix=/opt/rpki-client-8.7 \
+    && ./configure --with-rsync=rsync --with-user=rpki-client --prefix=/opt/rpki-client-8.7 \
     && make \
     && make install \
     && cd ..
@@ -73,7 +74,7 @@ RUN mkdir /opt/rpki-client-9.0
 RUN wget https://ftp.openbsd.org/pub/OpenBSD/rpki-client/rpki-client-9.0.tar.gz \
     && tar xf rpki-client-9.0.tar.gz \
     && cd rpki-client-9.0 \
-    && ./configure --with-user=rpki-client --prefix=/opt/rpki-client-9.0 \
+    && ./configure --with-rsync=rsync --with-user=rpki-client --prefix=/opt/rpki-client-9.0 \
     && make \
     && make install \
     && cd ..
@@ -81,13 +82,15 @@ RUN mkdir /opt/rpki-client-9.3
 RUN wget https://ftp.openbsd.org/pub/OpenBSD/rpki-client/rpki-client-9.3.tar.gz \
     && tar xf rpki-client-9.3.tar.gz \
     && cd rpki-client-9.3 \
-    && ./configure --with-user=rpki-client --prefix=/opt/rpki-client-9.3 \
+    && ./configure --with-rsync=rsync --with-user=rpki-client --prefix=/opt/rpki-client-9.3 \
     && make \
     && make install \
     && cd ..
-RUN git clone https://github.com/kristapsdz/openrsync.git \
-    && cd openrsync \
-    && ./configure \
+RUN mkdir /opt/rpki-client-master
+RUN git clone https://github.com/rpki-client/rpki-client-portable/ \
+    && cd rpki-client-portable \
+    && ./autogen.sh \
+    && ./configure --with-rsync=rsync --with-user=rpki-client --prefix=/opt/rpki-client-master \
     && make \
     && make install \
     && cd ..

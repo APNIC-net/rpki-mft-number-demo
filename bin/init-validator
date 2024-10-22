@@ -76,8 +76,13 @@ if ($validator eq 'routinator') {
     if (not -e $exec) {
         die "Validator version number is invalid.";
     }
-    my @vord = split /\./, $version;
-    my $ge_93 = ($vord[0] >= 9 and $vord[1] >= 3);
+    my $ge_93;
+    if ($version eq 'master') {
+      $ge_93 = 1;
+    } else {
+      my @vord = split /\./, $version;
+      $ge_93 = ($vord[0] >= 9 and $vord[1] >= 3);
+    }
     write_file("run-validator-link",
                "#!/bin/sh\n".
                # rpki-client >= 9.3 validates the TA certificate, but

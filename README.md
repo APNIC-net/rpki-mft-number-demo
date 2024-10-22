@@ -48,7 +48,7 @@ For demonstrating how RPKI validators handle specific manifest numbers
       - ripe-validator (2.24)
       - ripe-validator-3 (3.2-2021.04.07.12.55)
       - routinator (0.11.0, 0.12.0, 0.14.0, main)
-      - rpki-client (7.0, 8.7, 9.3)
+      - rpki-client (7.0, 8.7, 9.3, master)
 
     The string 'all' can also be used for each option,
     to test multiple versions of a validator, or multiple
@@ -175,8 +175,8 @@ running all tests for all validators.
     - The other validators appear to process the repository
       successfully for each test.
  - location-mismatch
-    - Routinator and rpki-client >= 9.3 verify that the signed
-      object's SIA matches the object's rsync path.
+    - rpki-client >= 9.3 verifies that the signed object's SIA matches
+      the object's rsync path.
     - The other validators do not check this.
 
 (This summary excludes the RIPE validators, since they have been
