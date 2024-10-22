@@ -104,22 +104,19 @@ running all tests for all validators.
       filename changes.
  - manifest-number-largest-value-159
  - manifest-number-too-large-159
-    - Routinator and FORT limit the manifest number to the largest
-      signed 160-bit value.
+    - Routinator, FORT, and rpki-client >= master limit the manifest
+      number to the largest signed 160-bit value.
     - OctoRPKI and rpki-client appear to process the repository
       successfully.
  - manifest-number-largest-value-160
  - manifest-number-too-large-160
-    - Since Routinator limits the manifest number to the largest
-      signed 160-bit value, it reports errors for these tests (which
-      use the largest unsigned 160-bit value).
+    - Since Routinator and rpki-client >= master limit the manifest
+      number to the largest signed 160-bit value, they report errors
+      for these tests (which use the largest unsigned 160-bit value).
     - As with the 159 tests, FORT reports generic errors for both of
       these tests.
     - OctoRPKI appears to process the repository successfully (i.e. it
       does not check for a manifest number that is too large).
-    - rpki-client reports specific errors on attempting to validate a
-      manifest with a value that exceeds the largest unsigned 160-bit
-      value.
  - manifest-thisupdate-reuse
  - manifest-thisupdate-regression
     - Routinator >= 0.14.0 and rpki-client >= 9.0 report errors for
@@ -152,17 +149,18 @@ running all tests for all validators.
     - Changing the CRL filename is fine for all validators.
  - crl-number-largest-value-159
  - crl-number-too-large-159
-    - As with manifest numbers, Routinator limits the CRL number to
-      the largest signed 160-bit value.
+    - As with manifest numbers, Routinator and rpki-client >= master
+      limit the CRL number to the largest signed 160-bit value.
     - The other validators appear to process the repository
       successfully for both tests.
  - crl-number-largest-value-160
  - crl-number-too-large-160
-    - rpki-client >= 8.7 limits the CRL number to the largest unsigned
-      160-bit value.
-    - The other validators (aside from Routinator, which limits the
-      number to the largest signed 160-bit value) appear to process
-      the repository successfully for both tests.
+    - rpki-client >= 8.7 and < master limits the CRL number to the
+      largest unsigned 160-bit value.
+    - The other validators (aside from Routinator and rpki-client >=
+      master, which limit the number to the largest signed 160-bit
+      value) appear to process the repository successfully for both
+      tests.
  - crl-lastupdate-reuse
  - crl-lastupdate-regression
  - crl-lastupdate-reuse-new-fn
