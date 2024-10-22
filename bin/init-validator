@@ -144,7 +144,7 @@ if ($validator eq 'routinator') {
     }
     write_file("run-validator-link",
                "#!/bin/bash\n".
-               "java -jar $exec -t tals/tal.tal --output-dir ./cache -r roas >myout 2>&1;\n".
+               "/root/.sdkman/candidates/java/current/bin/java -jar $exec -t tals/tal.tal --output-dir ./cache -r roas >myout 2>&1;\n".
                "cat myout | grep -v 'PASSED' | grep -v 'is VALID';\n".
                "cat roas | grep -v 'Max Length' | cut -d, -f2-4 > roas-common;\n");
 } elsif ($validator eq 'ripe-validator-3') {
@@ -200,10 +200,10 @@ if ($validator eq 'routinator') {
 
     write_file("run-validator-link",
                "#!/bin/bash\n".
-               "java -Dspring.config.location=classpath:/application.properties,file:./deb.properties ".
+               "/root/.sdkman/candidates/java/current/bin/java -Dspring.config.location=classpath:/application.properties,file:./deb.properties ".
                "-jar $exec >myout 2>&1 &\n".
                "sleep 10;\n".
-               "curl http://rpki.example.net:$port/api/objects/validated > validated;\n".
+               "curl -s http://rpki.example.net:$port/api/objects/validated > validated;\n".
                "killall -9 java;\n".
                "cat myout ".
                "| grep -e 'Tree validation succeeded' ".
