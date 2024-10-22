@@ -470,7 +470,7 @@ sub location_mismatch
     system("run-validator $vp");
     print "End validator run\n";
 
-    my $sia = "1.3.6.1.5.5.7.48.11;URI:rsync://blah.invalid";
+    my $sia = "1.3.6.1.5.5.7.48.11;URI:rsync://blah.invalid/test/test.roa";
     my $asn1 = issue_new_roa($ta_name, $sia);
     system("reissue-crl-and-mft --name $ta_name");
 
@@ -495,7 +495,7 @@ sub location_mismatch
     system("run-validator $vp2");
     print "End validator run\n";
 
-    $sia = "1.3.6.1.5.5.7.48.11;URI:rsync://blah.invalid";
+    $sia = "1.3.6.1.5.5.7.48.11;URI:rsync://blah.invalid/test/test2.roa";
     $asn1 = issue_new_roa($ta_name, $sia);
     system("reissue-crl-and-mft --name $ta_name");
 
