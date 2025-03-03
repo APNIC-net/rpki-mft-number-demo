@@ -22,33 +22,34 @@ my $max_160        = "1461501637330902918203684832716283019655932542975";
 my $max_160_plus_1 = "1461501637330902918203684832716283019655932542976";
 
 my %test_name_to_fn = (
-    'manifest-number-reuse'                 => \&manifest_number_reuse,
-    'manifest-number-reuse-new-fn'          => \&manifest_number_reuse_new_fn,
-    'manifest-number-regression'            => \&manifest_number_regression,
-    'manifest-number-regression-new-fn'     => \&manifest_number_regression_new_fn,
-    'manifest-number-largest-value-159'     => \&manifest_number_largest_value_159,
-    'manifest-number-too-large-159'         => \&manifest_number_too_large_159,
-    'manifest-number-largest-value-160'     => \&manifest_number_largest_value_160,
-    'manifest-number-too-large-160'         => \&manifest_number_too_large_160,
-    'manifest-thisupdate-reuse'             => \&manifest_thisupdate_reuse,
-    'manifest-thisupdate-reuse-new-fn'      => \&manifest_thisupdate_reuse_new_fn,
-    'manifest-thisupdate-regression'        => \&manifest_thisupdate_regression,
-    'manifest-thisupdate-regression-new-fn' => \&manifest_thisupdate_regression_new_fn,
-    'manifest-thisupdate-largest-value'     => \&manifest_thisupdate_largest_value,
-    'crl-number-reuse'                      => \&crl_number_reuse,
-    'crl-number-reuse-new-fn'               => \&crl_number_reuse_new_fn,
-    'crl-number-regression'                 => \&crl_number_regression,
-    'crl-number-regression-new-fn'          => \&crl_number_regression_new_fn,
-    'crl-number-largest-value-159'          => \&crl_number_largest_value_159,
-    'crl-number-too-large-159'              => \&crl_number_too_large_159,
-    'crl-number-largest-value-160'          => \&crl_number_largest_value_160,
-    'crl-number-too-large-160'              => \&crl_number_too_large_160,
-    'crl-lastupdate-reuse'                  => \&crl_lastupdate_reuse,
-    'crl-lastupdate-reuse-new-fn'           => \&crl_lastupdate_reuse_new_fn,
-    'crl-lastupdate-regression'             => \&crl_lastupdate_regression,
-    'crl-lastupdate-regression-new-fn'      => \&crl_lastupdate_regression_new_fn,
-    'crl-lastupdate-largest-value'          => \&crl_lastupdate_largest_value,
-    'location-mismatch'                     => \&location_mismatch,
+    'manifest-number-reuse'                  => \&manifest_number_reuse,
+    'manifest-number-reuse-new-fn'           => \&manifest_number_reuse_new_fn,
+    'manifest-number-regression'             => \&manifest_number_regression,
+    'manifest-number-regression-post-expiry' => \&manifest_number_regression_post_expiry,
+    'manifest-number-regression-new-fn'      => \&manifest_number_regression_new_fn,
+    'manifest-number-largest-value-159'      => \&manifest_number_largest_value_159,
+    'manifest-number-too-large-159'          => \&manifest_number_too_large_159,
+    'manifest-number-largest-value-160'      => \&manifest_number_largest_value_160,
+    'manifest-number-too-large-160'          => \&manifest_number_too_large_160,
+    'manifest-thisupdate-reuse'              => \&manifest_thisupdate_reuse,
+    'manifest-thisupdate-reuse-new-fn'       => \&manifest_thisupdate_reuse_new_fn,
+    'manifest-thisupdate-regression'         => \&manifest_thisupdate_regression,
+    'manifest-thisupdate-regression-new-fn'  => \&manifest_thisupdate_regression_new_fn,
+    'manifest-thisupdate-largest-value'      => \&manifest_thisupdate_largest_value,
+    'crl-number-reuse'                       => \&crl_number_reuse,
+    'crl-number-reuse-new-fn'                => \&crl_number_reuse_new_fn,
+    'crl-number-regression'                  => \&crl_number_regression,
+    'crl-number-regression-new-fn'           => \&crl_number_regression_new_fn,
+    'crl-number-largest-value-159'           => \&crl_number_largest_value_159,
+    'crl-number-too-large-159'               => \&crl_number_too_large_159,
+    'crl-number-largest-value-160'           => \&crl_number_largest_value_160,
+    'crl-number-too-large-160'               => \&crl_number_too_large_160,
+    'crl-lastupdate-reuse'                   => \&crl_lastupdate_reuse,
+    'crl-lastupdate-reuse-new-fn'            => \&crl_lastupdate_reuse_new_fn,
+    'crl-lastupdate-regression'              => \&crl_lastupdate_regression,
+    'crl-lastupdate-regression-new-fn'       => \&crl_lastupdate_regression_new_fn,
+    'crl-lastupdate-largest-value'           => \&crl_lastupdate_largest_value,
+    'location-mismatch'                      => \&location_mismatch,
 );
 
 sub make_random_string
@@ -760,6 +761,47 @@ sub manifest_number_reuse_new_fn
     print "---\n";
 }
 
+sub manifest_number_regression_post_expiry
+{
+    my ($validator_name, $validator_version) = @_;
+
+    my $display_version = get_display_version($validator_version);
+    print "manifest-number-regression-post-expiry ($validator_name $display_version)\n";
+    my $ta_name = make_random_string();
+    system("setup-ca --name $ta_name --resources 255.0.0.0/24");
+    my $validator_dir = make_random_string();
+    my $vp = "/tmp/$validator_dir";
+    system("init-validator $vp last-tal-path ".
+           "$validator_name $validator_version");
+    print "Initial validator run:\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(1);
+
+    my $start_dt   = DateTime->now(time_zone => 'UTC');
+    # Make it a fairly long period, so that slow validators don't hit
+    # the expiration date.
+    my $expiry_dt  = $start_dt->clone()->add(seconds => 15);
+    my $start_str  = $start_dt->strftime('%FT%T');
+    my $expiry_str = $expiry_dt->strftime('%FT%T');
+
+    system("reissue-crl-and-mft --name $ta_name --mft-number 3 ".
+           "--this-update $start_str ".
+           "--next-update $expiry_str");
+    print "Validator run (manifest number 3):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    sleep(16);
+
+    my $asn1 = issue_new_roa($ta_name);
+    system("reissue-crl-and-mft --name $ta_name --mft-number 2");
+    print "Validator run (regression after manifest expiry):\n";
+    system("run-validator $vp");
+    print "End validator run\n";
+    verify_new_roa($vp, 1, $asn1);
+    print "---\n";
+}
+
 sub manifest_number_regression
 {
     my ($validator_name, $validator_version) = @_;
@@ -1038,6 +1080,7 @@ if (not @ARGV) {
     print "  - manifest-number-reuse\n";
     print "  - manifest-number-reuse-new-fn\n";
     print "  - manifest-number-regression\n";
+    print "  - manifest-number-regression-post-expiry\n";
     print "  - manifest-number-regression-new-fn\n";
     print "  - manifest-number-largest-value-159\n";
     print "  - manifest-number-too-large-159\n";
@@ -1084,6 +1127,7 @@ if ($test_name eq 'all') {
         manifest-number-reuse
         manifest-number-reuse-new-fn
         manifest-number-regression
+        manifest-number-regression-post-expiry
         manifest-number-regression-new-fn
         manifest-number-largest-value-159
         manifest-number-too-large-159

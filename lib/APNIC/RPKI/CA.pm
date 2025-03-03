@@ -633,7 +633,11 @@ sub issue_new_ee_key
 
 sub issue_new_ee_certificate
 {
-    my ($self, $ip_resources, $as_resources, @sias) = @_;
+    my ($self, $ip_resources, $as_resources, $sias,
+        $start_date, $expiry_date) = @_;
+
+    $start_date  ||= DateTime->now(time_zone => 'UTC');
+    $expiry_date ||= $start_date->clone()->add(years => 1); 
 
     $self->_chdir_ca();
 
@@ -651,7 +655,7 @@ sub issue_new_ee_certificate
              "$aia\n".
              'crlDistributionPoints=URI:'.
              "rsync://$host_and_port/repo/$repo_dirname/$crl_filename\n".
-             (@sias ? 'subjectInfoAccess='.(join ',', @sias)."\n" : '').
+             ($sias ? 'subjectInfoAccess='.(join ',', @{$sias})."\n" : '').
              $extra;
 
     $self->_generate_config(signing_ca_ext_extra => $extra);
@@ -720,7 +724,7 @@ sub issue_roa
     }
 
     my @ip_resources_list = keys %ip_resources;
-    $self->issue_new_ee_certificate(\@ip_resources_list, [], $sia);
+    $self->issue_new_ee_certificate(\@ip_resources_list, [], [$sia]);
 
     my $stg_repo = $own_config->{'stg_repo'};
     my $roa_proper = $self->sign_cms($roa->encode(), ID_CT_ROA());
@@ -824,19 +828,6 @@ sub issue_manifest
     my $own_config = YAML::LoadFile('config.yml');
     my $new_mft_filename = $own_config->{'mft_filename'};
 
-    my $sia = $own_config->{'mft_sia'};
-    $sia =~ s/\.10;/.11;/;
-    $self->issue_new_ee_key();
-    $self->issue_new_ee_certificate(undef, undef, $sia);
-    my $aia = $own_config->{'aia'};
-
-    if (defined $mft_number) {
-        $own_config->{'manifest_number'} = $mft_number;
-    } else {
-        $own_config->{'manifest_number'}++;
-    }
-    my $manifest_number = $own_config->{'manifest_number'};
-
     my $this_update;
     if ($this_update_arg) {
         $this_update = $strp->parse_datetime($this_update_arg);
@@ -855,6 +846,20 @@ sub issue_manifest
     } else {
         $next_update = $this_update->clone()->add(days => 1);
     }
+
+    my $sia = $own_config->{'mft_sia'};
+    $sia =~ s/\.10;/.11;/;
+    $self->issue_new_ee_key();
+    $self->issue_new_ee_certificate(undef, undef, [$sia],
+                                    $this_update, $next_update);
+    my $aia = $own_config->{'aia'};
+
+    if (defined $mft_number) {
+        $own_config->{'manifest_number'} = $mft_number;
+    } else {
+        $own_config->{'manifest_number'}++;
+    }
+    my $manifest_number = $own_config->{'manifest_number'};
 
     my $stg_repo = $own_config->{'stg_repo'};
     my @files = `ls $stg_repo`;

@@ -18,6 +18,7 @@ For demonstrating how RPKI validators handle specific manifest numbers
       - manifest-number-reuse
       - manifest-number-reuse-new-fn
       - manifest-number-regression
+      - manifest-number-regression-post-expiry
       - manifest-number-regression-new-fn
       - manifest-number-largest-value-159
       - manifest-number-too-large-159
@@ -97,6 +98,9 @@ running all tests for all validators.
  - manifest-number-regression
     - Routinator >= 0.14.0 and rpki-client >= 8.7 report errors for
       these problems, while the other validators do not.
+ - manifest-number-regression-post-expiry
+    - Routinator >= 0.14.0, rpki-client = 8.7, and OctoRPKI do not
+      support resynchronising after expiry of the manifest.
  - manifest-number-reuse-new-fn
  - manifest-number-regression-new-fn
     - Routinator >= 0.14.0 and rpki-client >= 8.7 reset (in effect)
